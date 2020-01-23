@@ -1,6 +1,4 @@
-import PyQt5.QtWidgets as QtWidgets
-import PyQt5.Qsci as Qsci
-import PyQt5.QtGui as QtGui
+from PyQt5 import QtWidgets, QtGui, Qsci
 
 
 class CodeText(Qsci.QsciScintilla):
