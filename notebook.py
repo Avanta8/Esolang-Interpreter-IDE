@@ -34,6 +34,10 @@ class NotebookSplitter(QtWidgets.QSplitter):
 
         self.setChildrenCollapsible(False)
 
+        self._timer = QtCore.QTimer(self)
+        self._timer.timeout.connect(self.check_deleted)
+        self._timer.start(100)
+
         if _add_tabs:
             self.addWidget(NotebookTabWidget(_add_tabs=True))
             self.addWidget(NotebookTabWidget(_add_tabs=True))
@@ -57,20 +61,9 @@ class NotebookSplitter(QtWidgets.QSplitter):
                 new_splitter.insert_tab(notebook, location, drag_info)
                 self.insertWidget(current_index, new_splitter)
 
-    def addWidget(self, widget):
-        widget.destroyed.connect(self._child_destroyed)
-        super().addWidget(widget)
-
-    def insertWidget(self, index, widget):
-        widget.destroyed.connect(self._child_destroyed)
-        super().insertWidget(index, widget)
-
-    def _child_destroyed(self, object):
-        print('_child_destroyed', self.count(), self.widget(0))
-        # Seems like this is called before the widget is remove from the splitter
-        # So we have to check if count == 1 instead of count == 0
-        # However this breaks sometimes :/
-        if self.count() == 1:
+    def check_deleted(self):
+        if self.count() == 0:
+            print('deleting')
             self.deleteLater()
 
 
