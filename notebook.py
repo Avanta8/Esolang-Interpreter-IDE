@@ -33,10 +33,7 @@ class NotebookSplitter(QtWidgets.QSplitter):
         super().__init__(*args)
 
         self.setChildrenCollapsible(False)
-
-        self._timer = QtCore.QTimer(self)
-        self._timer.timeout.connect(self.check_deleted)
-        self._timer.start(100)
+        self.setHandleWidth(1)
 
         if _add_tabs:
             self.addWidget(NotebookTabWidget(_add_tabs=True))
@@ -61,10 +58,10 @@ class NotebookSplitter(QtWidgets.QSplitter):
                 new_splitter.insert_tab(notebook, location, drag_info)
                 self.insertWidget(current_index, new_splitter)
 
-    def check_deleted(self):
-        if self.count() == 0:
-            print('deleting')
+    def childEvent(self, event):
+        if event.removed() and self.count() == 0:
             self.deleteLater()
+        return super().childEvent(event)
 
 
 class NotebookTabWidget(QtWidgets.QTabWidget):
