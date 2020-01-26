@@ -29,19 +29,42 @@ class Notebook(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._notebook_splitter = NotebookSplitter()
+        self._current_tabwidget = None
+        self._notebook_splitter = NotebookSplitter(notebook=self)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self._notebook_splitter)
         self.setLayout(layout)
 
-    def addTab(self, *args, **kwargs):
+        QtWidgets.QApplication.instance().focusChanged.connect(self._focus_changed)
+
+    def add_tab(self, *args, **kwargs):
         """Add a tab to the first notebook. Has the same overload as
         `QtWidgets.QTabWidget.addTab`."""
         # if self._notebook_splitter.count() == 0:
         #     self._notebook_splitter.addWidget(NotebookTabWidget())
         # self._notebook_splitter.widget(0).addTab(*args, **kwargs)
         self._notebook_splitter.addTab(*args, **kwargs)
+
+    def add_tab_to_current(self, *args, **kwargs):
+        """Add a tab to the current tabwidget. Has the same overload as
+        `QtWidgets.QTabWidget.addTab`."""
+        if self._current_tabwidget is not None:
+            self._current_tabwidget.addTab(*args, **kwargs)
+        else:
+            self.add_tab(*args, **kwargs)
+
+    def _focus_changed(self, old, new):
+        """Called when the focus changes widget anywhere in the application.
+        If `new` widget is a child of a `NotebookTabWidget`, then set that
+        `NotebookTabWidget` to `self._current_tabwidget`.
+
+        This may potetially be slow if `new` is nested deeply."""
+        if self.isAncestorOf(new):
+            while not isinstance(new, NotebookTabWidget) or new.notebook != self:
+                # Second check is incase of nested notebooks. Not actually tested yet.
+                new = new.parent()
+            self._current_tabwidget = new
 
 
 class NotebookSplitter(QtWidgets.QSplitter):
@@ -62,8 +85,10 @@ class NotebookSplitter(QtWidgets.QSplitter):
         DropLocations.RIGHT: 1,
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, notebook, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.notebook = notebook
 
         self.setChildrenCollapsible(False)
         self.setHandleWidth(1)
@@ -72,7 +97,7 @@ class NotebookSplitter(QtWidgets.QSplitter):
         """Add the tab to the first widget in `self`. If `self` is
         empty, create a `NotebookTabWidget` and add it to that."""
         if self.count() == 0:
-            self.addWidget(NotebookTabWidget())
+            self.addWidget(NotebookTabWidget(notebook=self.notebook))
         self.widget(0).addTab(*args, **kwargs)
 
     def insert_tab(self, notebook, location, drag_info):
@@ -91,7 +116,7 @@ class NotebookSplitter(QtWidgets.QSplitter):
         if insert_orientation == self.orientation():
             # No change necessary to the current orientation
             next_index = current_index + self.DIRECTION_TO_NEXT_INDEX[location]
-            new_tabwidget = NotebookTabWidget()
+            new_tabwidget = NotebookTabWidget(notebook=self.notebook)
             new_tabwidget.add_from_drag_info(drag_info)
             self.insertWidget(next_index, new_tabwidget)
         else:
@@ -104,7 +129,7 @@ class NotebookSplitter(QtWidgets.QSplitter):
                 # Need to create new NotebookSplitter with required orientation.
                 # Add `notebook` to that splitter, and then insert the new tab.
                 # Insert the new splitter in `self` replacing `Notebook`.
-                new_splitter = ChildNotebookSplitter(insert_orientation)
+                new_splitter = ChildNotebookSplitter(insert_orientation, notebook=self.notebook)
                 new_splitter.replace_splitter_signal.connect(self._replace_splitter)
                 new_splitter.addWidget(notebook)
                 new_splitter.insert_tab(notebook, location, drag_info)
@@ -154,14 +179,18 @@ class ChildNotebookSplitter(NotebookSplitter):
 class NotebookTabWidget(QtWidgets.QTabWidget):
     """Tabwidget used by `NotebookSplitter`. Can handle drag events."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, notebook, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.notebook = notebook
+
         self.setAcceptDrops(True)
 
         self.setTabBar(NotebookTabBar(self))
         self.setTabsClosable(True)
 
         self.tabCloseRequested.connect(self.close_tab)
+        self.currentChanged.connect(self.current_tab_changed)
 
         self._rubberband = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle, self)
         self._stackedwidget = self.findChild(QtWidgets.QStackedWidget)  # Widget that displays the pages.
@@ -172,6 +201,11 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
         widget = self.widget(index)
         self.removeTab(index)
         widget.deleteLater()
+
+    def current_tab_changed(self, index):
+        """Called when the current tab is changed. Set the current tabwidget in `self.notebook`
+        to `self`"""
+        self.notebook._current_tabwidget = self
 
     def dragEnterEvent(self, event):
         """Accept the drag event if it (the content) is valid."""
@@ -414,7 +448,7 @@ if __name__ == "__main__":
     window = QtWidgets.QMainWindow()
     notebook = Notebook()
     for i in range(20):
-        notebook.addTab(QtWidgets.QPlainTextEdit(f'Page {i}'), f'Page {i}')
+        notebook.add_tab(QtWidgets.QPlainTextEdit(f'Page {i}'), f'Page {i}')
     window.setCentralWidget(notebook)
     window.show()
     app.exec_()
