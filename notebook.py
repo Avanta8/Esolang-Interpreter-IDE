@@ -71,7 +71,7 @@ class NotebookSplitter(QtWidgets.QSplitter):
     def addTab(self, *args, **kwargs):
         """Add the tab to the first widget in the splitter. If the splitter is
         empty, create a `NotebookTabWidget` and add it to that."""
-        if self.count() == 0:
+        if self.count() == 0: 
             self.addWidget(NotebookTabWidget())
         self.widget(0).addTab(*args, **kwargs)
 
