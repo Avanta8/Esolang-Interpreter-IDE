@@ -12,7 +12,7 @@ class CodeText(Qsci.QsciScintilla):
 
     def init_settings(self):
         self.setWrapMode(Qsci.QsciScintilla.WrapNone)
-        self.setEolVisibility(True)
+        # self.setEolVisibility(True)
 
         self.setIndentationsUseTabs(False)
         self.setTabWidth(4)
@@ -27,7 +27,8 @@ class CodeText(Qsci.QsciScintilla):
         self.SendScintilla(self.SCI_SETADDITIONALSELECTIONTYPING, True)
 
         self.setMarginType(0, self.NumberMargin)
-        self.setMarginWidth(0, 20)
+        self.setMarginWidth(0, 40)
+        self.setMarginWidth(1, 0)
 
     def configure_styles(self):
         self.setCaretLineBackgroundColor(QtGui.QColor(245, 245, 245))

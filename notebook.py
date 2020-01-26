@@ -71,6 +71,13 @@ class Notebook(QtWidgets.QWidget):
         """Return the current tabwidget."""
         return self._current_tabwidget
 
+    def current_page(self):
+        """Return current widget of the current tabwidget, or None if the current
+        tabwidget is None."""
+        if self._current_tabwidget is None:
+            return None
+        return self._current_tabwidget.currentWidget()
+
 
 class NotebookSplitter(QtWidgets.QSplitter):
     """Splitter that contains `NotebookTabWidget`s or other `ChildNotebookSplitter`s
@@ -376,6 +383,7 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
         """Called when tab is removed."""
         if self.count() == 0:
             self.deleteLater()
+            self.notebook._current_tabwidget = None
 
 
 class NotebookTabBar(QtWidgets.QTabBar):
