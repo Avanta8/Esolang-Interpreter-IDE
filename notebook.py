@@ -1,3 +1,14 @@
+"""
+Notebook that can handle tabs being dragged around to different locations.
+Uses a hierarchy of QSplitters and QTabWidgets to store the tabs.
+
+Todo:
+    - When the tabbar is full and the drag is on the tabbar, then scroll the tabbar.
+    - Allow user to specify splitter handle width.
+    - Make it work with vertical orientation tabs.
+"""
+
+
 import enum
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -13,8 +24,26 @@ class DropLocations(enum.Enum):
     TABBAR = enum.auto()
 
 
+class Notebook(QtWidgets.QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._notebook_splitter = NotebookSplitter()
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self._notebook_splitter)
+        self.setLayout(layout)
+
+    def addTab(self, *args, **kwargs):
+        """Add a tab to the first notebook. Has the same overload as
+        `QtWidgets.QTabWidget.addTab`."""
+        if self._notebook_splitter.count() == 0:
+            self._notebook_splitter.addWidget(NotebookTabWidget())
+        self._notebook_splitter.widget(0).addTab(*args, **kwargs)
+
+
 class NotebookSplitter(QtWidgets.QSplitter):
-    """Splitter that contains `NotebookTabWidget`s or other `NotebookSplitter`s
+    """Splitter that contains `NotebookTabWidget`s or other `ChildNotebookSplitter`s
     to display the hierarchy of tabwidgets."""
 
     DIRECTION_TO_ORIENTATION = {
@@ -71,17 +100,51 @@ class NotebookSplitter(QtWidgets.QSplitter):
                 # Need to create new NotebookSplitter with required orientation.
                 # Add `notebook` to that splitter, and then insert the new tab.
                 # Insert the new splitter in `self` replacing `Notebook`.
-                new_splitter = NotebookSplitter()
+                new_splitter = ChildNotebookSplitter(insert_orientation)
+                new_splitter.replace_splitter_signal.connect(self._replace_splitter)
                 new_splitter.addWidget(notebook)
                 new_splitter.insert_tab(notebook, location, drag_info)
                 self.insertWidget(current_index, new_splitter)
 
+    def _replace_splitter(self, splitter):
+        """Slot called by a child splitter when its count becomes 1.
+        Replace that splitter with its only child."""
+        index = self.indexOf(splitter)
+        # The splitter may emit the signal multiple times.
+        if index >= 0:
+            self.replaceWidget(index, splitter.widget(0))
+            splitter.deleteLater()  # This may not be necessary
+
+
+class ChildNotebookSplitter(NotebookSplitter):
+    """Splitter used to display the hierarchy of tabwidgets. This splitter should
+    never have less that 2 widgets displayed, apart from just after creation.
+    Emit a `replace_splitter_signal` if a widget is removed and the count is 1.
+    Delete `self` if a widget is removed and there are no other widgets being
+    displayed by `self`."""
+    replace_splitter_signal = QtCore.pyqtSignal(NotebookSplitter)
+
     def childEvent(self, event):
-        """If the event is a `QEvent.ChildRemoved` and the `count()` == 0,
-        Then delete self."""
+        """If the event is a `QEvent.ChildRemoved` and the `count()` == 0, delete self.
+        If the event is a `QEvent.ChildRemoved` and the `count()` == 1, then emit the signal
+        to replace `self` with its only inner widget."""
         if event.removed() and self.count() == 0:
             self.deleteLater()
+        elif event.removed() and self.count() == 1:
+            self.replace_splitter_signal.emit(self)
+
+            # I could do this so it only emits the signal once.
+            # self.blockSignals(True)
+            # Then in `insert_tab`, check if the signals were originally
+            # blocked before unblocking them.
         return super().childEvent(event)
+
+    def insert_tab(self, *args, **kwargs):
+        """Insert the tab like `NotebookSplitter`. However, prevent
+        ALL signals from being emitted during the insertion."""
+        self.blockSignals(True)
+        super().insert_tab(*args, **kwargs)
+        self.blockSignals(False)
 
 
 class NotebookTabWidget(QtWidgets.QTabWidget):
@@ -348,7 +411,7 @@ class DragInfo:
         self.tabname = tabname
 
 
-def main():
+def main1():
     app = QtWidgets.QApplication([])
     window = QtWidgets.QMainWindow()
     notebook = NotebookSplitter(_add_tabs=True)
@@ -357,5 +420,16 @@ def main():
     app.exec_()
 
 
+def main2():
+    app = QtWidgets.QApplication([])
+    window = QtWidgets.QMainWindow()
+    notebook = Notebook()
+    for i in range(20):
+        notebook.addTab(QtWidgets.QPlainTextEdit(f'Page {i}'), f'Page {i}')
+    window.setCentralWidget(notebook)
+    window.show()
+    app.exec_()
+
+
 if __name__ == "__main__":
-    main()
+    main2()
