@@ -60,16 +60,11 @@ class NotebookSplitter(QtWidgets.QSplitter):
         DropLocations.RIGHT: 1,
     }
 
-    def __init__(self, *args, _add_tabs=False):
-        super().__init__(*args)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.setChildrenCollapsible(False)
         self.setHandleWidth(1)
-
-        if _add_tabs:
-            self.addWidget(NotebookTabWidget(_add_tabs=True))
-            self.addWidget(NotebookTabWidget(_add_tabs=True))
-            self.addWidget(NotebookTabWidget(_add_tabs=True))
 
     def insert_tab(self, notebook, location, drag_info):
         """Insert a tab, called from `notebook`. Insert it at `location` relative
@@ -150,8 +145,8 @@ class ChildNotebookSplitter(NotebookSplitter):
 class NotebookTabWidget(QtWidgets.QTabWidget):
     """Tabwidget used by `NotebookSplitter`. Can handle drag events."""
 
-    def __init__(self, parent=None, _add_tabs=False):
-        super().__init__(parent=parent)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.setAcceptDrops(True)
 
         self.setTabBar(NotebookTabBar(self))
@@ -161,11 +156,6 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
 
         self._rubberband = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle, self)
         self._stackedwidget = self.findChild(QtWidgets.QStackedWidget)  # Widget that displays the pages.
-
-        if _add_tabs:
-            self.addTab(QtWidgets.QTextEdit(f'{id(self)}: page1', self), 'Page 1')
-            self.addTab(QtWidgets.QTextEdit(f'{id(self)}: page2', self), 'Page 2')
-            self.addTab(QtWidgets.QTextEdit(f'{id(self)}: page3', self), 'Page 3')
 
     def close_tab(self, index):
         """Called when the X is pressed on one of the tabs.
@@ -298,7 +288,7 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
         location, _, index = self._get_drop_location(event.pos())
         if location is DropLocations.TABBAR:
             self.insert_from_drag_info(index, drag_info)
-        elif location is DropLocations.MIDDLE:
+        elif location is DropLocations.MIDDLE or location is DropLocations.NONE:
             self.add_from_drag_info(drag_info)
         else:
             self.parent().insert_tab(self, location, drag_info)
@@ -345,7 +335,7 @@ class NotebookTabBar(QtWidgets.QTabBar):
     """Tabbar used by `NotebookTabWidget`. Create a `QDrag` when a tab
     is dragged."""
 
-    def __init__(self, tabwidget=None):
+    def __init__(self, tabwidget):
         super().__init__(tabwidget)
         self.drag_info = DragInfo()
         self._tabwidget = tabwidget
@@ -411,16 +401,7 @@ class DragInfo:
         self.tabname = tabname
 
 
-def main1():
-    app = QtWidgets.QApplication([])
-    window = QtWidgets.QMainWindow()
-    notebook = NotebookSplitter(_add_tabs=True)
-    window.setCentralWidget(notebook)
-    window.show()
-    app.exec_()
-
-
-def main2():
+if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     window = QtWidgets.QMainWindow()
     notebook = Notebook()
@@ -429,7 +410,3 @@ def main2():
     window.setCentralWidget(notebook)
     window.show()
     app.exec_()
-
-
-if __name__ == "__main__":
-    main2()
