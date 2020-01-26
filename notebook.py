@@ -38,9 +38,10 @@ class Notebook(QtWidgets.QWidget):
     def addTab(self, *args, **kwargs):
         """Add a tab to the first notebook. Has the same overload as
         `QtWidgets.QTabWidget.addTab`."""
-        if self._notebook_splitter.count() == 0:
-            self._notebook_splitter.addWidget(NotebookTabWidget())
-        self._notebook_splitter.widget(0).addTab(*args, **kwargs)
+        # if self._notebook_splitter.count() == 0:
+        #     self._notebook_splitter.addWidget(NotebookTabWidget())
+        # self._notebook_splitter.widget(0).addTab(*args, **kwargs)
+        self._notebook_splitter.addTab(*args, **kwargs)
 
 
 class NotebookSplitter(QtWidgets.QSplitter):
@@ -66,6 +67,13 @@ class NotebookSplitter(QtWidgets.QSplitter):
 
         self.setChildrenCollapsible(False)
         self.setHandleWidth(1)
+
+    def addTab(self, *args, **kwargs):
+        """Add the tab to the first widget in the splitter. If the splitter is
+        empty, create a `NotebookTabWidget` and add it to that."""
+        if self.count() == 0:
+            self.addWidget(NotebookTabWidget())
+        self.widget(0).addTab(*args, **kwargs)
 
     def insert_tab(self, notebook, location, drag_info):
         """Insert a tab, called from `notebook`. Insert it at `location` relative
