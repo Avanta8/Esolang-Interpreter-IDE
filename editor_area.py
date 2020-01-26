@@ -24,5 +24,7 @@ class EditorPage(QtWidgets.QMainWindow):
 
 
 class EditorNotebook(Notebook):
+
     def new_page(self):
-        self.addTab(EditorPage(), 'Untitled')
+        # self.add_tab(EditorPage(), 'Untitled')
+        self.add_tab_to_current(EditorPage(), 'Untitled')

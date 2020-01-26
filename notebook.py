@@ -7,6 +7,7 @@ Todo:
     - Allow icons to work with the tabs.
     - Allow user to specify splitter handle width.
     - Make it work with vertical orientation tabs.
+    - Can drag the whole tabbar to drag the whole tabwidget
 """
 
 

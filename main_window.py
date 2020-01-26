@@ -14,8 +14,6 @@ class IDE(QtWidgets.QMainWindow):
     def init_widgets(self):
         self.setGeometry(300, 200, 1280, 720)
 
-        menubar = self.menuBar()
-
         menus = {
             'File': (
                 (('New', self), ('Ctrl+N',), ('New file',), (self.file_new,)),
@@ -29,6 +27,7 @@ class IDE(QtWidgets.QMainWindow):
             ),
         }
 
+        menubar = self.menuBar()
         for name, actions in menus.items():
             menu = menubar.addMenu(name)
             for action, shortcut, statustip, connect in actions:
