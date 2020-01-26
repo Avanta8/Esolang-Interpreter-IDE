@@ -209,7 +209,7 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
 
     def current_tab_changed(self, index):
         """Called when the current tab is changed. Set the current tabwidget in `self.notebook`
-        to `self`"""
+        to `self`."""
         self.notebook._current_tabwidget = self
 
     def dragEnterEvent(self, event):
@@ -219,7 +219,7 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
 
     def dragMoveEvent(self, event):
         """"Display the rubberband showing where the tab will end up
-        if the drag was to be dropped"""
+        if the drag was to be dropped."""
         location, rect, _ = self._get_drop_location(event.pos())
 
         if rect is None:
