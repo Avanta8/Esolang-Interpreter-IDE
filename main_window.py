@@ -89,9 +89,11 @@ class IDE(QtWidgets.QMainWindow):
 
     def run_code(self):
         print('run_code')
+        self.editor_notebook.open_code_runner()
 
     def open_visualier(self):
         print('open_visualier')
+        self.editor_notebook.open_visualiser()
 
     def create_new_page(self, filename=None, filepath=None, filetype=FileTypes.NONE, text=''):
         self.editor_notebook.new_page(filename=filename, filepath=filepath, filetype=filetype, text=text)

@@ -21,21 +21,40 @@ class EditorPage(QtWidgets.QMainWindow):
         self.code_runner = QtWidgets.QWidget(self)
 
         self.code_runner_dock_widget = QtWidgets.QDockWidget('Code Runner')
+        self.code_runner_dock_widget.setWidget(self.code_runner)
+
         self.visualiser_dock_widget = QtWidgets.QDockWidget('Visualiser')
+        self.visualiser_dock_widget.setWidget(self.visualiser)
 
         self.setCentralWidget(self.code_text)
-        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.code_runner_dock_widget)
-        self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.visualiser_dock_widget)
 
     def set_file_info(self, filepath, filetype):
         self.filepath = filepath
         self.filetype = filetype
+
+        self.code_text.set_filetype(filetype)
+        # self.visualiser.set_filetype(filetype)
+        # self.code_runner.set_filetype(filetype)
 
     def get_file_info(self):
         return self.filepath, self.filetype
 
     def get_text(self):
         return self.code_text.text()
+
+    def open_visualiser(self):
+        """Dock the `visualiser_dock_widget` if it is not already visible"""
+        if self.visualiser.isVisible():
+            return
+        self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.visualiser_dock_widget)
+        self.visualiser_dock_widget.show()
+
+    def open_code_runner(self):
+        """Dock the `code_runner_dock_widget` if it is not already visible"""
+        if self.code_runner.isVisible():
+            return
+        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.code_runner_dock_widget)
+        self.code_runner_dock_widget.show()
 
 
 class EditorNotebook(Notebook):
@@ -62,3 +81,15 @@ class EditorNotebook(Notebook):
         if page is None:
             return None
         return page.get_text()
+
+    def open_visualiser(self):
+        page = self.current_page()
+        if page is None:
+            return
+        page.open_visualiser()
+
+    def open_code_runner(self):
+        page = self.current_page()
+        if page is None:
+            return
+        page.open_code_runner()
