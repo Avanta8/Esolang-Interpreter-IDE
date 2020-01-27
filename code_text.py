@@ -7,9 +7,9 @@ import lexers
 class CodeText(Qsci.QsciScintilla):
 
     LEXERS = {
+        FileTypes.NONE: lexers.NoneLexer,
         FileTypes.BRAINFUCK: lexers.BrainfuckLexer,
-        FileTypes.PYTHON: Qsci.QsciLexerPython,
-        FileTypes.NONE: Qsci.QsciLexerSQL,
+        FileTypes.PYTHON: lexers.NoneLexer,
     }
 
     def __init__(self, parent=None):
@@ -18,12 +18,8 @@ class CodeText(Qsci.QsciScintilla):
         self.init_settings()
         self.configure_styles()
 
-        # self.setFont(QtGui.QFont('Source Code Pro', 10))
-
-        # self.brainfuck_lexer = lexers.BrainfuckLexer(self)
-        # self.setLexer(self.brainfuck_lexer)
-
-        self.setLexer(lexers.BrainfuckLexer(self))
+        # self.setLexer(lexers.BrainfuckLexer(self))
+        self.setLexer(None)
 
     def init_settings(self):
         self.setWrapMode(Qsci.QsciScintilla.WrapNone)
@@ -52,6 +48,7 @@ class CodeText(Qsci.QsciScintilla):
 
     def set_filetype(self, filetype):
         self.setLexer(self.LEXERS[filetype](self))
+        print(filetype, self.lexer())
 
 
 if __name__ == "__main__":
