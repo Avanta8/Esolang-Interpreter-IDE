@@ -115,7 +115,7 @@ class IDE(QtWidgets.QMainWindow):
     def _parse_filepath(filepath):
         """Return filename, filepath, filetype"""
         extension = os.path.splitext(filepath)[1]
-        filetype = FileTypes.BRAINFUCK if extension == '.b' else FileTypes.NONE
+        filetype = FileTypes.from_extension(extension)
         filename = os.path.basename(filepath)
         return filename, filepath, filetype
 
