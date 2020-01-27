@@ -16,7 +16,7 @@ import enum
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class DropLocations(enum.Enum):
+class _DropLocations(enum.Enum):
     NONE = enum.auto()
     TOP = enum.auto()
     BOTTOM = enum.auto()
@@ -31,7 +31,7 @@ class Notebook(QtWidgets.QWidget):
         super().__init__(*args, **kwargs)
 
         self._current_tabwidget = None
-        self._notebook_splitter = NotebookSplitter(notebook=self)
+        self._notebook_splitter = _NotebookSplitter(notebook=self)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self._notebook_splitter)
@@ -62,7 +62,7 @@ class Notebook(QtWidgets.QWidget):
 
         This may potetially be slow if `new` is nested deeply."""
         if self.isAncestorOf(new):
-            while not isinstance(new, NotebookTabWidget) or new.notebook != self:
+            while not isinstance(new, _NotebookTabWidget) or new.notebook != self:
                 # Second check is incase of nested notebooks. Not actually tested yet.
                 new = new.parent()
             self._current_tabwidget = new
@@ -79,22 +79,22 @@ class Notebook(QtWidgets.QWidget):
         return self._current_tabwidget.currentWidget()
 
 
-class NotebookSplitter(QtWidgets.QSplitter):
+class _NotebookSplitter(QtWidgets.QSplitter):
     """Splitter that contains `NotebookTabWidget`s or other `ChildNotebookSplitter`s
     to display the hierarchy of tabwidgets."""
 
     DIRECTION_TO_ORIENTATION = {
-        DropLocations.TOP: QtCore.Qt.Vertical,
-        DropLocations.BOTTOM: QtCore.Qt.Vertical,
-        DropLocations.LEFT: QtCore.Qt.Horizontal,
-        DropLocations.RIGHT: QtCore.Qt.Horizontal,
+        _DropLocations.TOP: QtCore.Qt.Vertical,
+        _DropLocations.BOTTOM: QtCore.Qt.Vertical,
+        _DropLocations.LEFT: QtCore.Qt.Horizontal,
+        _DropLocations.RIGHT: QtCore.Qt.Horizontal,
     }
 
     DIRECTION_TO_NEXT_INDEX = {
-        DropLocations.TOP: 0,
-        DropLocations.BOTTOM: 1,
-        DropLocations.LEFT: 0,
-        DropLocations.RIGHT: 1,
+        _DropLocations.TOP: 0,
+        _DropLocations.BOTTOM: 1,
+        _DropLocations.LEFT: 0,
+        _DropLocations.RIGHT: 1,
     }
 
     def __init__(self, *args, notebook, **kwargs):
@@ -109,7 +109,7 @@ class NotebookSplitter(QtWidgets.QSplitter):
         """Add the tab to the first widget in `self`. If `self` is
         empty, create a `NotebookTabWidget` and add it to that."""
         if self.count() == 0:
-            self.addWidget(NotebookTabWidget(notebook=self.notebook))
+            self.addWidget(_NotebookTabWidget(notebook=self.notebook))
         self.widget(0).addTab(*args, **kwargs)
 
     def insert_tab(self, notebook, location, drag_info):
@@ -128,7 +128,7 @@ class NotebookSplitter(QtWidgets.QSplitter):
         if insert_orientation == self.orientation():
             # No change necessary to the current orientation
             next_index = current_index + self.DIRECTION_TO_NEXT_INDEX[location]
-            new_tabwidget = NotebookTabWidget(notebook=self.notebook)
+            new_tabwidget = _NotebookTabWidget(notebook=self.notebook)
             new_tabwidget.add_from_drag_info(drag_info)
             self.insertWidget(next_index, new_tabwidget)
         else:
@@ -141,7 +141,7 @@ class NotebookSplitter(QtWidgets.QSplitter):
                 # Need to create new NotebookSplitter with required orientation.
                 # Add `notebook` to that splitter, and then insert the new tab.
                 # Insert the new splitter in `self` replacing `Notebook`.
-                new_splitter = ChildNotebookSplitter(insert_orientation, notebook=self.notebook)
+                new_splitter = _ChildNotebookSplitter(insert_orientation, notebook=self.notebook)
                 new_splitter.replace_splitter_signal.connect(self._replace_splitter)
                 new_splitter.addWidget(notebook)
                 new_splitter.insert_tab(notebook, location, drag_info)
@@ -158,13 +158,13 @@ class NotebookSplitter(QtWidgets.QSplitter):
             splitter.deleteLater()  # This may not be necessary
 
 
-class ChildNotebookSplitter(NotebookSplitter):
+class _ChildNotebookSplitter(_NotebookSplitter):
     """Splitter used to display the hierarchy of tabwidgets. This splitter should
     never have less that 2 widgets displayed, apart from just after creation.
     Emit a `replace_splitter_signal` if a widget is removed and the count is 1.
     Delete `self` if a widget is removed and there are no other widgets being
     displayed by `self`."""
-    replace_splitter_signal = QtCore.pyqtSignal(NotebookSplitter)
+    replace_splitter_signal = QtCore.pyqtSignal(_NotebookSplitter)
 
     def childEvent(self, event):
         """If the event is a `QEvent.ChildRemoved` and the `count()` == 0, delete self.
@@ -190,7 +190,7 @@ class ChildNotebookSplitter(NotebookSplitter):
         self.blockSignals(False)
 
 
-class NotebookTabWidget(QtWidgets.QTabWidget):
+class _NotebookTabWidget(QtWidgets.QTabWidget):
     """Tabwidget used by `NotebookSplitter`. Can handle drag events."""
 
     def __init__(self, *args, notebook, **kwargs):
@@ -200,7 +200,7 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
 
         self.setAcceptDrops(True)
 
-        self.setTabBar(NotebookTabBar(self))
+        self.setTabBar(_NotebookTabBar(self))
         self.setTabsClosable(True)
 
         self.tabCloseRequested.connect(self.close_tab)
@@ -254,7 +254,7 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
 
         # Check whether `pos` is within the page
         if not self._stackedwidget.geometry().contains(pos):
-            return DropLocations.NONE, None
+            return _DropLocations.NONE, None
 
         # Map `pos` to relative to the page
         pos_in_widget = self._stackedwidget.mapFrom(self, pos)
@@ -268,14 +268,14 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
         height = self._stackedwidget.height()
 
         if wx < width / 4:
-            return DropLocations.LEFT, (dx, dy, width / 4, height)
+            return _DropLocations.LEFT, (dx, dy, width / 4, height)
         if wx > width * 3 / 4:
-            return DropLocations.RIGHT, (dx + width * 3 / 4, dy, width / 4, height)
+            return _DropLocations.RIGHT, (dx + width * 3 / 4, dy, width / 4, height)
         if wy < height / 4:
-            return DropLocations.TOP, (dx, dy, width, height / 4)
+            return _DropLocations.TOP, (dx, dy, width, height / 4)
         if wy > height * 3 / 4:
-            return DropLocations.BOTTOM, (dx, dy + height * 3 / 4, width, height / 4)
-        return DropLocations.MIDDLE, (dx, dy, width, height)
+            return _DropLocations.BOTTOM, (dx, dy + height * 3 / 4, width, height / 4)
+        return _DropLocations.MIDDLE, (dx, dy, width, height)
 
     def _check_drag_in_tabbar(self, pos):
         """Check if `pos` is within the tabbar. If it is, return
@@ -298,7 +298,7 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
         #   drag was at the end of the tabbar, it would be outside of the geometry
         #   of the tabbar. However, we still want to record this, so we only check the height
         if not 0 <= wy <= tabbar.height():
-            return DropLocations.NONE, None, -1
+            return _DropLocations.NONE, None, -1
 
         for i in range(self.count()):
             rect = tabbar.tabRect(i)
@@ -333,7 +333,7 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
             # Make the width of the rubberband the same length as the last tab
             rubberband_rect = dx + px + pw / 2, dy, pw, tabbar.height()
 
-        return DropLocations.TABBAR, rubberband_rect, insert_index
+        return _DropLocations.TABBAR, rubberband_rect, insert_index
 
     def dropEvent(self, event):
         """Hide the rubberband. Handle where the event should be dropped."""
@@ -343,9 +343,9 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
         event.accept()
 
         location, _, index = self._get_drop_location(event.pos())
-        if location is DropLocations.TABBAR:
+        if location is _DropLocations.TABBAR:
             self.insert_from_drag_info(index, drag_info)
-        elif location is DropLocations.MIDDLE or location is DropLocations.NONE:
+        elif location is _DropLocations.MIDDLE or location is _DropLocations.NONE:
             self.add_from_drag_info(drag_info)
         else:
             self.parent().insert_tab(self, location, drag_info)
@@ -355,13 +355,13 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
         the rubberband), and the tab index it was dropped at. If the drop location is the
         tabbar, return the index it was dropped at; otherwise, return -1 as the index."""
         location, rect, index = self._check_drag_in_tabbar(pos)
-        if location is DropLocations.NONE:
+        if location is _DropLocations.NONE:
             location, rect = self._check_drag_in_page(pos)
         return location, rect, index
 
     def _is_valid_drag_event(self, event):
         """Return if the QDropEvent `event` is valid for this widget."""
-        return isinstance(event.source(), NotebookTabBar)
+        return isinstance(event.source(), _NotebookTabBar)
 
     def insert_from_drag_info(self, index, drag_info):
         """Insert a widget stored in `drag_info` to index.
@@ -390,22 +390,22 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
             self.notebook._current_tabwidget = None
 
 
-class NotebookTabBar(QtWidgets.QTabBar):
+class _NotebookTabBar(QtWidgets.QTabBar):
     """Tabbar used by `NotebookTabWidget`. Create a `QDrag` when a tab
     is dragged."""
 
     def __init__(self, tabwidget):
         super().__init__(tabwidget)
-        self.drag_info = DragInfo()
+        self.drag_info = _DragInfo()
         self._tabwidget = tabwidget
 
     def mousePressEvent(self, event):
         """If it is a leftmouseclick, store a draginfo."""
         if event.button() == QtCore.Qt.LeftButton:
             tab_index = self.tabAt(event.pos())
-            self.drag_info = DragInfo(event.pos(), tab_index,
-                                      self._tabwidget.widget(tab_index),
-                                      self.tabText(tab_index))
+            self.drag_info = _DragInfo(event.pos(), tab_index,
+                                       self._tabwidget.widget(tab_index),
+                                       self.tabText(tab_index))
 
         return super().mousePressEvent(event)
 
@@ -436,12 +436,12 @@ class NotebookTabBar(QtWidgets.QTabBar):
     def mouseReleaseEvent(self, event):
         """If the button is the lmb, reset `self.drag_info`"""
         if event.button() == QtCore.Qt.LeftButton:
-            self.drag_info = DragInfo()
+            self.drag_info = _DragInfo()
 
         return super().mouseReleaseEvent(event)
 
 
-class DragInfo:
+class _DragInfo:
     """Store info about a drag.
 
     Attributes:
