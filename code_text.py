@@ -18,7 +18,6 @@ class CodeText(Qsci.QsciScintilla):
         self.init_settings()
         self.configure_styles()
 
-        # self.setLexer(lexers.BrainfuckLexer(self))
         self.setLexer(None)
 
     def init_settings(self):
@@ -48,7 +47,6 @@ class CodeText(Qsci.QsciScintilla):
 
     def set_filetype(self, filetype):
         self.setLexer(self.LEXERS[filetype](self))
-        print(filetype, self.lexer())
 
 
 if __name__ == "__main__":

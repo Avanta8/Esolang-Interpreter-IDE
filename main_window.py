@@ -48,7 +48,6 @@ class IDE(QtWidgets.QMainWindow):
         self.setCentralWidget(self.editor_notebook)
 
     def file_new(self):
-        # self.editor_notebook.new_page()
         self.create_new_page()
 
     def file_open(self):
@@ -61,10 +60,8 @@ class IDE(QtWidgets.QMainWindow):
         self.create_new_page(*self._parse_filepath(filepath), text)
 
     def file_save(self):
-        print('file_save')
         current_file_info = self.editor_notebook.get_current_file_info()
         if current_file_info is None:
-            print('no current file')
             return
 
         filepath, _ = current_file_info
@@ -74,9 +71,7 @@ class IDE(QtWidgets.QMainWindow):
             self._write_file(filepath, self.editor_notebook.get_current_text())
 
     def file_saveas(self):
-        print('file_saveas')
         if self.editor_notebook.current_tabwidget() is None:
-            print('no current tabwidget')
             return
 
         filepath, extension = QtWidgets.QFileDialog.getSaveFileName(self, filter=self._file_dialog_filter)
@@ -88,11 +83,9 @@ class IDE(QtWidgets.QMainWindow):
         self.file_save()
 
     def run_code(self):
-        print('run_code')
         self.editor_notebook.open_code_runner()
 
     def open_visualier(self):
-        print('open_visualier')
         self.editor_notebook.open_visualiser()
 
     def create_new_page(self, filename=None, filepath=None, filetype=FileTypes.NONE, text=''):
