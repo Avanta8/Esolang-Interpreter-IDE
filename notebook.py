@@ -154,6 +154,7 @@ class NotebookSplitter(QtWidgets.QSplitter):
         # The splitter may emit the signal multiple times.
         if index >= 0:
             self.replaceWidget(index, splitter.widget(0))
+            splitter.hide()
             splitter.deleteLater()  # This may not be necessary
 
 
@@ -170,6 +171,7 @@ class ChildNotebookSplitter(NotebookSplitter):
         If the event is a `QEvent.ChildRemoved` and the `count()` == 1, then emit the signal
         to replace `self` with its only inner widget."""
         if event.removed() and self.count() == 0:
+            self.hide()
             self.deleteLater()
         elif event.removed() and self.count() == 1:
             self.replace_splitter_signal.emit(self)
@@ -212,6 +214,7 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
         Remove that tab and delete it."""
         widget = self.widget(index)
         self.removeTab(index)
+        widget.hide()
         widget.deleteLater()
 
     def current_tab_changed(self, index):
@@ -382,6 +385,7 @@ class NotebookTabWidget(QtWidgets.QTabWidget):
     def tabRemoved(self, index):
         """Called when tab is removed."""
         if self.count() == 0:
+            self.hide()
             self.deleteLater()
             self.notebook._current_tabwidget = None
 
