@@ -21,8 +21,9 @@ class CodeText(Qsci.QsciScintilla):
         self.setLexer(None)
 
     def init_settings(self):
+        # self.setEolMode(Qsci.QsciScintilla.SC_EOL_LF)
         self.setWrapMode(Qsci.QsciScintilla.WrapNone)
-        # self.setEolVisibility(True)
+        self.setEolVisibility(True)
 
         self.setIndentationsUseTabs(False)
         self.setTabWidth(4)

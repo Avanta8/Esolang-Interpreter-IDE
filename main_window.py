@@ -51,7 +51,6 @@ class IDE(QtWidgets.QMainWindow):
         self.create_new_page()
 
     def file_open(self):
-        print('file_open')
         filepath, extension = QtWidgets.QFileDialog.getOpenFileName(self, filter=self._file_dialog_filter)
         if not filepath:
             return

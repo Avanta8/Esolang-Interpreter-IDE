@@ -93,7 +93,7 @@ class BrainfuckLexer(_LanguageLexer):
     def styleText(self, start, end):
         self.startStyling(start)
 
-        text = self.parent().text()[start:end]
+        text = self.editor().text()[start:end]
 
         for char in text:
             if char in '[]':
