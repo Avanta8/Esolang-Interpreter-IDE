@@ -1,14 +1,29 @@
 from PyQt5 import QtWidgets, QtGui, Qsci
 
+from constants import FileTypes
+import lexers
+
 
 class CodeText(Qsci.QsciScintilla):
+
+    LEXERS = {
+        FileTypes.BRAINFUCK: lexers.BrainfuckLexer,
+        FileTypes.PYTHON: Qsci.QsciLexerPython,
+        FileTypes.NONE: Qsci.QsciLexerSQL,
+    }
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
 
         self.init_settings()
         self.configure_styles()
 
-        self.setFont(QtGui.QFont('Source Code Pro', 10))
+        # self.setFont(QtGui.QFont('Source Code Pro', 10))
+
+        # self.brainfuck_lexer = lexers.BrainfuckLexer(self)
+        # self.setLexer(self.brainfuck_lexer)
+
+        self.setLexer(lexers.BrainfuckLexer(self))
 
     def init_settings(self):
         self.setWrapMode(Qsci.QsciScintilla.WrapNone)
@@ -34,6 +49,9 @@ class CodeText(Qsci.QsciScintilla):
         self.setCaretLineBackgroundColor(QtGui.QColor(245, 245, 245))
         self.setIndentationGuidesBackgroundColor(QtGui.QColor(211, 211, 211))
         self.setIndentationGuidesForegroundColor(QtGui.QColor(211, 211, 211))
+
+    def set_filetype(self, filetype):
+        self.setLexer(self.LEXERS[filetype](self))
 
 
 if __name__ == "__main__":
