@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from notebook import Notebook
+from visualiser import MainVisualiser
 from code_text import CodeText
 
 
@@ -17,7 +18,7 @@ class EditorPage(QtWidgets.QMainWindow):
 
     def init_widgets(self):
         self.code_text = CodeText(self)
-        self.visualiser = QtWidgets.QWidget(self)
+        self.visualiser = MainVisualiser(self)
         self.code_runner = QtWidgets.QWidget(self)
 
         self.code_runner_dock_widget = QtWidgets.QDockWidget('Code Runner')
@@ -33,7 +34,7 @@ class EditorPage(QtWidgets.QMainWindow):
         self.filetype = filetype
 
         self.code_text.set_filetype(filetype)
-        # self.visualiser.set_filetype(filetype)
+        self.visualiser.set_filetype(filetype)
         # self.code_runner.set_filetype(filetype)
 
     def get_file_info(self):
