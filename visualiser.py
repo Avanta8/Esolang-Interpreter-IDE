@@ -35,8 +35,9 @@ class CommandsWidget(QtWidgets.QWidget):
                         self.stop_button, self.continue_button}
 
         self.button_layout = QtWidgets.QGridLayout()
-        self.button_layout.setColumnStretch(0, 1)
-        self.button_layout.setColumnStretch(1, 1)
+        self.button_layout.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
+        # self.button_layout.setColumnStretch(0, 1)
+        # self.button_layout.setColumnStretch(1, 1)
 
         groupbox = QtWidgets.QGroupBox('Commands:')
         groupbox.setLayout(self.button_layout)
@@ -57,6 +58,7 @@ class CommandsWidget(QtWidgets.QWidget):
         bottom_layout.addWidget(self.forwards_button)
 
         jump_layout = QtWidgets.QVBoxLayout()
+        jump_layout.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
         jump_layout.addLayout(top_layout)
         jump_layout.addLayout(bottom_layout)
 
@@ -70,6 +72,7 @@ class CommandsWidget(QtWidgets.QWidget):
         self.speed_checkbox = QtWidgets.QCheckBox('Faster')
 
         speed_layout = QtWidgets.QVBoxLayout()
+        speed_layout.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
         speed_layout.addWidget(self.speed_slider)
         speed_layout.addWidget(self.speed_checkbox)
 
