@@ -237,11 +237,10 @@ class BrainfuckVisualiserWidget(BaseVisualiserWidget):
 
     def init_widgets(self):
 
-        self.table = QtWidgets.QTableView(self)
+        self.table = BrainfuckTable(self, min_column_width=40, column_counts=(20, 10, 5))
         self.table_model = BrainfuckTableModel()
         self.table.setModel(self.table_model)
-        self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-        self.table.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+        self.table.size_changed.connect(self.table_model.set_columns)
 
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.table)
@@ -254,23 +253,52 @@ class BrainfuckVisualiserWidget(BaseVisualiserWidget):
         self.table_model.set_tape(self._interpreter)
 
 
+class BrainfuckTable(QtWidgets.QTableView):
+    size_changed = QtCore.pyqtSignal(int)
+
+    def __init__(self, parent=None, min_column_width=50, column_counts=()):
+        super().__init__(parent=parent)
+
+        self.min_column_width = min_column_width
+        self.column_counts = sorted(column_counts, reverse=True)
+
+        self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+
+        columns = self._get_columns(event.size().width())
+        self.size_changed.emit(columns)
+
+    def _get_columns(self, width):
+        for column_count in self.column_counts:
+            if width / column_count >= self.min_column_width:
+                return column_count
+
+        # Return this if there is not a specified number of columns
+        # or if the table was too small to fit the smallest valid number of columns
+        # but we must have at least one column
+        return width // self.min_column_width or 1
+
+
 class BrainfuckTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
 
-        self._columns = 5
+        self.columns = 5
 
         self.reset()
 
     def rowCount(self, parent):
-        return len(self._tape) // self._columns + 1
+        return len(self._tape) // self.columns + 1
 
     def columnCount(self, parent):
-        return self._columns
+        return self.columns
 
     def data(self, index, role):
         if role == QtCore.Qt.DisplayRole:
-            cell_index = index.row() * self._columns + index.column()
+            cell_index = index.row() * self.columns + index.column()
             return self._tape[cell_index] if 0 <= cell_index < len(self._tape) else QtCore.QVariant()
         return QtCore.QVariant()
 
@@ -279,6 +307,16 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
 
     def set_tape(self, interpreter):
         self._tape = interpreter.tape
+        # TODO:
+        #   Emit dataChanged instead: https://doc.qt.io/qtforpython/PySide2/QtCore/QAbstractItemModel.html?highlight=qabstractitemmodel#PySide2.QtCore.PySide2.QtCore.QAbstractItemModel.dataChanged
+        #   This may make it more efficient
+        self.layoutChanged.emit()
+
+    def set_columns(self, columns):
+        if columns == self.columns:
+            return
+
+        self.columns = columns
         self.layoutChanged.emit()
 
 
