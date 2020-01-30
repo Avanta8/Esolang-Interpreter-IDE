@@ -204,7 +204,14 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
         # Should be overidden in a subclass
         pass
 
-    def configure_visual(self, display=True):
+    def configure_visual(self):
+        """Method should be called after every step."""
+        # Should be overidden in a subclass
+        pass
+
+    def display_visual(self):
+        """Method should be called when the changes to the visualiser want
+        to be displayed."""
         # Should be overidden in a subclass
         pass
 
@@ -224,7 +231,7 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
         else:
             return True
 
-    def step(self, display=True):
+    def step(self):
         if self._interpreter is None:
             if not self.restart_interpreter():
                 return False
@@ -235,7 +242,7 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
             self.handle_error(error)
             return False
         else:
-            self.configure_visual(display)
+            self.configure_visual()
             return True
 
     def stop(self):
@@ -243,7 +250,7 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
 
     def handle_error(self, error):
         print(error)
-        self.configure_visual(True)
+        self.display_visual()
 
 
 class NoVisualiserWidget(BaseVisualiserWidget):
@@ -271,8 +278,11 @@ class BrainfuckVisualiserWidget(BaseVisualiserWidget):
     def reset_visual(self):
         self.table_model.reset()
 
-    def configure_visual(self, display=True):
-        self.table_model.set_tape(self._interpreter, display)
+    def configure_visual(self):
+        self.table_model.set_tape(self._interpreter)
+
+    def display_visual(self):
+        self.table_model.display_changes()
 
 
 class BrainfuckTable(QtWidgets.QTableView):
@@ -321,7 +331,6 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
     def data(self, index, role):
         if role == QtCore.Qt.DisplayRole:
             cell_index = index.row() * self.columns + index.column()
-            # return self._tape[cell_index] if 0 <= cell_index < len(self._tape) else QtCore.QVariant()
             if 0 <= cell_index < len(self._tape):
                 return self._tape[cell_index]
         return QtCore.QVariant()
@@ -329,13 +338,16 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
     def reset(self):
         self._tape = [0] * 20
 
-    def set_tape(self, interpreter, display):
+    def set_tape(self, interpreter):
         self._tape = interpreter.tape
+
+    def display_changes(self):
+        self.layoutChanged.emit()
+
         # TODO:
-        #   Emit dataChanged instead: https://doc.qt.io/qtforpython/PySide2/QtCore/QAbstractItemModel.html?highlight=qabstractitemmodel#PySide2.QtCore.PySide2.QtCore.QAbstractItemModel.dataChanged
+        #   Store the specific changes whenever `set_tape` is called, then
+        #   emit dataChanged instead: https://doc.qt.io/qtforpython/PySide2/QtCore/QAbstractItemModel.html?highlight=qabstractitemmodel#PySide2.QtCore.PySide2.QtCore.QAbstractItemModel.dataChanged
         #   This may make it more efficient
-        if display:
-            self.layoutChanged.emit()
 
     def set_columns(self, columns):
         if columns == self.columns:
@@ -396,35 +408,32 @@ class MainVisualiser(QtWidgets.QSplitter):
 
     def command_step(self):
         self.visualiser_frame.step()
+        self.visualiser_frame.display_visual()
 
     def command_run(self):
-        print('run')
         self.run_timer.start()
         self.run_signal()
 
     def command_pause(self):
-        print('pause')
         self.run_timer.stop()
 
     def command_stop(self):
-        print('stop')
         self.run_timer.stop()
         self.visualiser_frame.stop()
 
     def command_back(self):
-        print('back')
+        pass
 
     def command_jump_forwards(self, steps):
         for i in range(steps):
-            if not self.visualiser_frame.step(False):
+            if not self.visualiser_frame.step():
                 return
-        self.visualiser_frame.configure_visual(True)
+        self.visualiser_frame.display_visual()
 
     def command_jump_backwards(self):
         pass
 
     def run_signal(self):
-        print('run signal')
         self.command_jump_forwards(self.steps_skip + 1)
 
     def get_code_text(self):
