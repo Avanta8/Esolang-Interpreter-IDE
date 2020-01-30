@@ -5,8 +5,10 @@ import interpreters
 
 
 class CommandsWidget(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, parent=None, flags=QtCore.Qt.WindowFlags()):
+        super().__init__(parent=parent, flags=flags)
+
+        self.main_visualiser = parent
 
         self.init_widgets()
         self._connect_signals()
@@ -91,11 +93,15 @@ class CommandsWidget(QtWidgets.QWidget):
         self.forwards_button.clicked.connect(self.pressed_forwards)
         self.backwards_button.clicked.connect(self.pressed_backwards)
 
+        self.speed_slider.valueChanged.connect(self.main_visualiser.set_runspeed)
+        self.speed_checkbox.stateChanged.connect(self.main_visualiser.set_runspeed)
+
     def pressed_run(self):
         self._display_buttons(
             self.stop_button,
             self.pause_button,
         )
+        self.main_visualiser.command_run()
 
     def pressed_step(self):
         self._display_buttons(
@@ -104,13 +110,14 @@ class CommandsWidget(QtWidgets.QWidget):
             self.back_button,
             self.continue_button
         )
-        self.parent().command_step()
+        self.main_visualiser.command_step()
 
     def pressed_stop(self):
         self._display_buttons(
             self.run_button,
             self.step_button
         )
+        self.main_visualiser.command_stop()
 
     def pressed_pause(self):
         self._display_buttons(
@@ -119,6 +126,7 @@ class CommandsWidget(QtWidgets.QWidget):
             self.back_button,
             self.continue_button
         )
+        self.main_visualiser.command_pause()
 
     def pressed_back(self):
         self._display_buttons(
@@ -127,6 +135,7 @@ class CommandsWidget(QtWidgets.QWidget):
             self.back_button,
             self.continue_button
         )
+        self.main_visualiser.command_back()
 
     def pressed_forwards(self):
         pass
@@ -188,12 +197,15 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
         self.init_widgets()
 
     def init_widgets(self):
+        # Should be overidden in a subclass
         pass
 
     def reset_visual(self):
+        # Should be overidden in a subclass
         pass
 
-    def configure_visual(self):
+    def configure_visual(self, display=True):
+        # Should be overidden in a subclass
         pass
 
     def restart_interpreter(self):
@@ -207,21 +219,31 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
                                                        undo_input_func=self.main_visualiser.undo_input,
                                                        output_func=self.main_visualiser.set_output)
         except interpreters.ProgramError as error:
+            self.handle_error(error)
             return False
         else:
             return True
 
-    def step(self):
+    def step(self, display=True):
         if self._interpreter is None:
             if not self.restart_interpreter():
-                return
+                return False
 
         try:
             ret = self._interpreter.step()
         except interpreters.InterpreterError as error:
-            return
+            self.handle_error(error)
+            return False
         else:
-            self.configure_visual()
+            self.configure_visual(display)
+            return True
+
+    def stop(self):
+        self._interpreter = None
+
+    def handle_error(self, error):
+        print(error)
+        self.configure_visual(True)
 
 
 class NoVisualiserWidget(BaseVisualiserWidget):
@@ -249,8 +271,8 @@ class BrainfuckVisualiserWidget(BaseVisualiserWidget):
     def reset_visual(self):
         self.table_model.reset()
 
-    def configure_visual(self):
-        self.table_model.set_tape(self._interpreter)
+    def configure_visual(self, display=True):
+        self.table_model.set_tape(self._interpreter, display)
 
 
 class BrainfuckTable(QtWidgets.QTableView):
@@ -299,18 +321,21 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
     def data(self, index, role):
         if role == QtCore.Qt.DisplayRole:
             cell_index = index.row() * self.columns + index.column()
-            return self._tape[cell_index] if 0 <= cell_index < len(self._tape) else QtCore.QVariant()
+            # return self._tape[cell_index] if 0 <= cell_index < len(self._tape) else QtCore.QVariant()
+            if 0 <= cell_index < len(self._tape):
+                return self._tape[cell_index]
         return QtCore.QVariant()
 
     def reset(self):
         self._tape = [0] * 20
 
-    def set_tape(self, interpreter):
+    def set_tape(self, interpreter, display):
         self._tape = interpreter.tape
         # TODO:
         #   Emit dataChanged instead: https://doc.qt.io/qtforpython/PySide2/QtCore/QAbstractItemModel.html?highlight=qabstractitemmodel#PySide2.QtCore.PySide2.QtCore.QAbstractItemModel.dataChanged
         #   This may make it more efficient
-        self.layoutChanged.emit()
+        if display:
+            self.layoutChanged.emit()
 
     def set_columns(self, columns):
         if columns == self.columns:
@@ -336,8 +361,12 @@ class MainVisualiser(QtWidgets.QSplitter):
         self.editor_page = parent
 
         self.init_widgets()
+        self.set_runspeed()
 
     def init_widgets(self):
+        self.run_timer = QtCore.QTimer(self)
+        self.run_timer.timeout.connect(self.run_signal)
+
         self.visualiser_frame = NoVisualiserWidget(self)
         self.commands_frame = CommandsWidget(self)
         self.io_panel = IOWidget(self)
@@ -355,8 +384,48 @@ class MainVisualiser(QtWidgets.QSplitter):
         self.visualiser_frame = visualiser_type(self)
         self.insertWidget(0, self.visualiser_frame)
 
+    def set_runspeed(self):
+        if self.commands_frame.speed_checkbox.isChecked():
+            runspeed = 10
+            self.steps_skip = self.commands_frame.speed_slider.value() // 5
+        else:
+            value = self.commands_frame.speed_slider.value() + 1
+            runspeed = int(1000 / (value * value * .0098 + 1))
+            self.steps_skip = 0
+        self.run_timer.setInterval(runspeed)
+
     def command_step(self):
         self.visualiser_frame.step()
+
+    def command_run(self):
+        print('run')
+        self.run_timer.start()
+        self.run_signal()
+
+    def command_pause(self):
+        print('pause')
+        self.run_timer.stop()
+
+    def command_stop(self):
+        print('stop')
+        self.run_timer.stop()
+        self.visualiser_frame.stop()
+
+    def command_back(self):
+        print('back')
+
+    def command_jump_forwards(self, steps):
+        for i in range(steps):
+            if not self.visualiser_frame.step(False):
+                return
+        self.visualiser_frame.configure_visual(True)
+
+    def command_jump_backwards(self):
+        pass
+
+    def run_signal(self):
+        print('run signal')
+        self.command_jump_forwards(self.steps_skip + 1)
 
     def get_code_text(self):
         return self.editor_page.get_text()
