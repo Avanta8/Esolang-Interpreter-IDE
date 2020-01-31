@@ -71,6 +71,13 @@ class Notebook(QtWidgets.QWidget):
         """Return the current tabwidget."""
         return self._current_tabwidget
 
+    def set_current_tabwidget(self, tabwidget):
+        """Set the current tabwidget to `tabwidget`. If `tabwidget` is not
+        in the notebook, then raise a `ValueError`."""
+        if not isinstance(tabwidget, _NotebookTabWidget) or tabwidget.notebook is not self:
+            raise ValueError('Notebook is not the parent of tabwidget')
+        self._current_tabwidget = tabwidget
+
     def current_page(self):
         """Return current widget of the current tabwidget, or None if the current
         tabwidget is None."""
@@ -193,10 +200,13 @@ class _ChildNotebookSplitter(_NotebookSplitter):
 class _NotebookTabWidget(QtWidgets.QTabWidget):
     """Tabwidget used by `NotebookSplitter`. Can handle drag events."""
 
+    clicked = QtCore.pyqtSignal(QtWidgets.QTabWidget)
+
     def __init__(self, *args, notebook, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.notebook = notebook
+        self.clicked.connect(self.notebook.set_current_tabwidget)
 
         self.setAcceptDrops(True)
 
@@ -220,7 +230,7 @@ class _NotebookTabWidget(QtWidgets.QTabWidget):
     def current_tab_changed(self, index):
         """Called when the current tab is changed. Set the current tabwidget in `self.notebook`
         to `self`."""
-        self.notebook._current_tabwidget = self
+        self.clicked.emit(self)
 
     def dragEnterEvent(self, event):
         """Accept the drag event if it (the content) is valid."""
