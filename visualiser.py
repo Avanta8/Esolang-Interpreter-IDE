@@ -283,6 +283,7 @@ class BrainfuckVisualiserWidget(BaseVisualiserWidget):
 
     def display_visual(self):
         self.table_model.display_changes()
+        self.table.scrollTo(self.table_model.get_current_index())
 
 
 class BrainfuckTable(QtWidgets.QTableView):
@@ -296,6 +297,7 @@ class BrainfuckTable(QtWidgets.QTableView):
 
         self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+        self.setSelectionMode(QtWidgets.QTableView.NoSelection)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -315,31 +317,39 @@ class BrainfuckTable(QtWidgets.QTableView):
 
 
 class BrainfuckTableModel(QtCore.QAbstractTableModel):
+
+    _current_cell_brush = QtGui.QBrush(QtGui.QColor('red'))
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
 
-        self.columns = 5
+        self._columns = 5
 
         self.reset()
 
     def rowCount(self, parent):
-        return len(self._tape) // self.columns + 1
+        return len(self._tape) // self._columns + (1 if len(self._tape) % self._columns else 0)
 
     def columnCount(self, parent):
-        return self.columns
+        return self._columns
 
     def data(self, index, role):
+        cell_index = index.row() * self._columns + index.column()
         if role == QtCore.Qt.DisplayRole:
-            cell_index = index.row() * self.columns + index.column()
             if 0 <= cell_index < len(self._tape):
                 return self._tape[cell_index]
+        elif role == QtCore.Qt.BackgroundRole:
+            if cell_index == self._current_cell_index:
+                return self._current_cell_brush
         return QtCore.QVariant()
 
     def reset(self):
         self._tape = [0] * 20
+        self._current_cell_index = -1
 
     def set_tape(self, interpreter):
         self._tape = interpreter.tape
+        self._current_cell_index = interpreter.tape_pointer
 
     def display_changes(self):
         self.layoutChanged.emit()
@@ -350,11 +360,15 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
         #   This may make it more efficient
 
     def set_columns(self, columns):
-        if columns == self.columns:
+        if columns == self._columns:
             return
 
-        self.columns = columns
+        self._columns = columns
         self.layoutChanged.emit()
+
+    def get_current_index(self):
+        return self.createIndex(self._current_cell_index // self._columns,
+                                self._current_cell_index % self._columns)
 
 
 class MainVisualiser(QtWidgets.QSplitter):
@@ -430,7 +444,7 @@ class MainVisualiser(QtWidgets.QSplitter):
                 return
         self.visualiser_frame.display_visual()
 
-    def command_jump_backwards(self):
+    def command_jump_backwards(self, steps):
         pass
 
     def run_signal(self):
