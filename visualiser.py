@@ -237,12 +237,14 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
                 return False
 
         try:
-            ret = self._interpreter.step()
+            index = self._interpreter.step()
+            chars = 1
         except interpreters.InterpreterError as error:
             self.handle_error(error)
             return False
         else:
             self.configure_visual()
+            self.main_visualiser.set_current_position(index, chars)
             return True
 
     def stop(self):
@@ -410,6 +412,12 @@ class MainVisualiser(QtWidgets.QSplitter):
         self.visualiser_frame = visualiser_type(self)
         self.insertWidget(0, self.visualiser_frame)
 
+    def set_current_position(self, position, chars):
+        self._current_command_position = (position, chars)
+
+    def highlight_current_position(self):
+        self.editor_page.code_text.highlight_position(*self._current_command_position)
+
     def set_runspeed(self):
         if self.commands_frame.speed_checkbox.isChecked():
             runspeed = 10
@@ -423,6 +431,7 @@ class MainVisualiser(QtWidgets.QSplitter):
     def command_step(self):
         self.visualiser_frame.step()
         self.visualiser_frame.display_visual()
+        self.highlight_current_position()
 
     def command_run(self):
         self.run_timer.start()
@@ -443,6 +452,7 @@ class MainVisualiser(QtWidgets.QSplitter):
             if not self.visualiser_frame.step():
                 return
         self.visualiser_frame.display_visual()
+        self.highlight_current_position()
 
     def command_jump_backwards(self, steps):
         pass

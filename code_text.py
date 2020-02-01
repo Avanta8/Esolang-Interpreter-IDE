@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtGui, Qsci
+from PyQt5 import QtWidgets, QtGui, QtCore, Qsci
 
 from constants import FileTypes
 import lexers
@@ -12,6 +12,9 @@ class CodeText(Qsci.QsciScintilla):
         FileTypes.PYTHON: lexers.NoneLexer,
     }
 
+    # According to docs, The first 8 are normally used by lexers
+    _current_position_indicator_number = 20
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
 
@@ -19,6 +22,8 @@ class CodeText(Qsci.QsciScintilla):
         self.configure_styles()
 
         self.setLexer(None)
+
+        self._last_command_position = (0, 0)
 
     def init_settings(self):
         # self.setEolMode(Qsci.QsciScintilla.SC_EOL_LF)
@@ -46,8 +51,19 @@ class CodeText(Qsci.QsciScintilla):
         self.setIndentationGuidesBackgroundColor(QtGui.QColor(211, 211, 211))
         self.setIndentationGuidesForegroundColor(QtGui.QColor(211, 211, 211))
 
+        self.indicatorDefine(self.FullBoxIndicator, self._current_position_indicator_number)
+        self.setIndicatorDrawUnder(True, self._current_position_indicator_number)
+        self.setIndicatorForegroundColor(QtGui.QColor('grey'))
+        self.setIndicatorOutlineColor(QtGui.QColor('grey'))
+
     def set_filetype(self, filetype):
         self.setLexer(self.LEXERS[filetype](self))
+
+    def highlight_position(self, position, chars):
+        self.SendScintilla(self.SCI_SETINDICATORCURRENT, self._current_position_indicator_number)
+        self.SendScintilla(self.SCI_INDICATORCLEARRANGE, *self._last_command_position)
+        self.SendScintilla(self.SCI_INDICATORFILLRANGE, position, chars)
+        self._last_command_position = (position, chars)
 
 
 if __name__ == "__main__":
