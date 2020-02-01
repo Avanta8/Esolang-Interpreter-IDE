@@ -55,7 +55,27 @@ class BFInterpreter:
 
         self.commands[self.current_instruction]()
 
-        return code_pointer
+        return code_pointer, 1
+
+    def back(self):
+        try:
+            prev_info = self.past.pop()
+        except IndexError:
+            assert self.instruction_count == 0, f'prev_info is empty but instruction count = {self.instruction_count}'
+            raise NoPreviousExecutionError
+        assert self.instruction_count != 0, f'prev_info not empty but instruction count = {self.instruction_count}'
+
+        if self.current_instruction == ',' and self.undo_input_func is not None:
+            self.undo_input_func()
+
+        self.code_pointer, self.tape_pointer, tape_val, output_len = prev_info
+
+        if output_len != len(self.output):
+            self.output = self.output[:-1]
+            self.output_func(self.output)
+        self.tape[self.tape_pointer] = tape_val
+        self.instruction_count -= 1
+        return (self.code_pointer, 1) if self.code_pointer >= 0 else (0, 0)
 
     def run(self):
         while True:
@@ -104,25 +124,6 @@ class BFInterpreter:
         self.output += chr(self.current_cell)
         if self.output_func:
             self.output_func(self.output)
-
-    def back(self):
-        try:
-            prev_info = self.past.pop()
-        except IndexError:
-            raise NoPreviousExecutionError
-
-        undo_input = self.current_instruction == ','
-        if undo_input and self.undo_input_func is not None:
-            self.undo_input_func()
-
-        self.code_pointer, self.tape_pointer, tape_val, output_len = prev_info
-
-        if output_len != len(self.output):
-            self.output = self.output[:-1]
-            self.output_func(self.output)
-        self.tape[self.tape_pointer] = tape_val
-        self.instruction_count -= 1
-        return self.code_pointer
 
     @property
     def current_cell(self):
