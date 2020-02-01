@@ -165,6 +165,10 @@ class IOWidget(QtWidgets.QWidget):
         self.init_widgets()
 
     def init_widgets(self):
+        self._error_text_timer = QtCore.QTimer(self)
+        self._error_text_timer.setSingleShot(True)
+        self._error_text_timer.timeout.connect(self._error_text_timeout)
+
         self.input_text = QtWidgets.QPlainTextEdit(self)
         self.output_text = QtWidgets.QPlainTextEdit(self)
         self.error_text = QtWidgets.QLineEdit(self)
@@ -181,6 +185,17 @@ class IOWidget(QtWidgets.QWidget):
         layout.addWidget(self.output_text)
         layout.addWidget(self.error_text)
         self.setLayout(layout)
+
+    def set_error_text(self, message):
+        self._error_text_timer.stop()
+        self.error_text.setText(message)
+
+    def timed_error_text(self, message, time=1000):
+        self.set_error_text(message)
+        self._error_text_timer.start(time)
+
+    def _error_text_timeout(self):
+        self.error_text.setText('')
 
 
 class BaseVisualiserWidget(QtWidgets.QWidget):
@@ -225,8 +240,8 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
                                                        input_func=self.main_visualiser.get_next_input,
                                                        undo_input_func=self.main_visualiser.undo_input,
                                                        output_func=self.main_visualiser.set_output)
-        except interpreters.ProgramError as error:
-            self.handle_error(error)
+        except interpreters.InterpreterError as error:
+            self.main_visualiser.handle_interpreter_error(error)
             return False
         else:
             return True
@@ -237,10 +252,23 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
                 return False
 
         try:
-            index = self._interpreter.step()
-            chars = 1
+            index, chars = self._interpreter.step()
         except interpreters.InterpreterError as error:
-            self.handle_error(error)
+            self.main_visualiser.handle_interpreter_error(error)
+            return False
+        else:
+            self.configure_visual()
+            self.main_visualiser.set_current_position(index, chars)
+            return True
+
+    def back(self):
+        if self._interpreter is None:
+            return False
+
+        try:
+            index, chars = self._interpreter.back()
+        except interpreters.InterpreterError as error:
+            self.main_visualiser.handle_interpreter_error(error)
             return False
         else:
             self.configure_visual()
@@ -249,10 +277,6 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
 
     def stop(self):
         self._interpreter = None
-
-    def handle_error(self, error):
-        print(error)
-        self.display_visual()
 
 
 class NoVisualiserWidget(BaseVisualiserWidget):
@@ -445,20 +469,55 @@ class MainVisualiser(QtWidgets.QSplitter):
         self.visualiser_frame.stop()
 
     def command_back(self):
-        pass
+        self.visualiser_frame.back()
+        self.visualiser_frame.display_visual()
+        self.highlight_current_position()
 
     def command_jump_forwards(self, steps):
         for i in range(steps):
             if not self.visualiser_frame.step():
-                return
+                succesful = False
+                break
+        else:
+            succesful = True
         self.visualiser_frame.display_visual()
         self.highlight_current_position()
+        return succesful
 
     def command_jump_backwards(self, steps):
         pass
 
     def run_signal(self):
-        self.command_jump_forwards(self.steps_skip + 1)
+        success = self.command_jump_forwards(self.steps_skip + 1)
+        if not success:
+            self.commands_frame.pressed_pause()
+
+    def handle_interpreter_error(self, error):
+        # Put this in the visualiser widget instead.
+        message = None
+        if isinstance(error, interpreters.ExecutionEndedError):
+            message = 'Execution finished'
+        elif isinstance(error, interpreters.NoPreviousExecutionError):
+            message = 'No previous execution'
+        elif isinstance(error, interpreters.NoInputError):
+            message = 'Enter input'
+        elif isinstance(error, interpreters.ProgramError):
+            error_type = error.error
+            if error_type is interpreters.ErrorTypes.UNMATCHED_OPEN_PAREN:
+                message = 'Unmatched opening parentheses'
+            elif error_type is interpreters.ErrorTypes.UNMATCHED_CLOSE_PAREN:
+                message = 'Unmatched closing parentheses'
+            elif error_type is interpreters.ErrorTypes.INVALID_TAPE_CELL:
+                message = 'Tape pointer out of bounds'
+
+        if message is None:
+            raise error
+
+        self.io_panel.timed_error_text(message)
+        if hasattr(error, 'location'):
+            # TODO:
+            #   Display the error location on code text.
+            pass
 
     def get_code_text(self):
         return self.editor_page.get_text()
