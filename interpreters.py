@@ -104,7 +104,7 @@ class BFInterpreter:
             error_location = self.code_pointer
             self.back()  # Reset back to was it was before
             raise ProgramRuntimeError(
-                ErrorTypes.INVALID_TAPE_CELL, error_location)
+                ErrorTypes.INVALID_TAPE_CELL, (error_location, 1))
 
     def increment_cell(self):
         self.tape[self.tape_pointer] = (self.tape[self.tape_pointer] + 1) % 256
@@ -145,12 +145,12 @@ class BFInterpreter:
                     match = stack.pop()
                 except IndexError:
                     raise ProgramSyntaxError(
-                        ErrorTypes.UNMATCHED_CLOSE_PAREN, i)
+                        ErrorTypes.UNMATCHED_CLOSE_PAREN, (i, 1))
                 brackets[match] = i
                 brackets[i] = match
         if stack:
             raise ProgramSyntaxError(
-                ErrorTypes.UNMATCHED_OPEN_PAREN, stack[-1])
+                ErrorTypes.UNMATCHED_OPEN_PAREN, (stack[-1], 1))
         return brackets
 
 
@@ -247,7 +247,7 @@ class FastBrainfuckInterpreter:
                     match = bracket_stack.pop()
                 except IndexError:
                     raise ProgramSyntaxError(
-                        ErrorTypes.UNMATCHED_CLOSE_PAREN, i)
+                        ErrorTypes.UNMATCHED_CLOSE_PAREN, (i, 1))
                 current = len(final_commands)
                 brackets[match] = current
                 brackets[current] = match
