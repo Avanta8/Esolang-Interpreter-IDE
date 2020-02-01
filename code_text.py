@@ -16,6 +16,8 @@ class CodeText(Qsci.QsciScintilla):
     _CURRENT_POSITION_INDICATOR = 8
     _ERROR_INDICATOR = 9
 
+    key_during_visualisation = QtCore.pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
 
@@ -26,6 +28,7 @@ class CodeText(Qsci.QsciScintilla):
 
         self._last_command_position = (0, 0)
         self._error_locations = set()
+        self._during_visualisation = False
 
     def init_settings(self):
         # self.setEolMode(Qsci.QsciScintilla.SC_EOL_LF)
@@ -68,9 +71,14 @@ class CodeText(Qsci.QsciScintilla):
 
     def highlight_position(self, position, chars):
         self.SendScintilla(self.SCI_SETINDICATORCURRENT, self._CURRENT_POSITION_INDICATOR)
-        self.SendScintilla(self.SCI_INDICATORCLEARRANGE, *self._last_command_position)
+        self.remove_highlight_position()
         self.SendScintilla(self.SCI_INDICATORFILLRANGE, position, chars)
         self._last_command_position = (position, chars)
+
+    def remove_highlight_position(self):
+        self.SendScintilla(self.SCI_SETINDICATORCURRENT, self._CURRENT_POSITION_INDICATOR)
+        self.SendScintilla(self.SCI_INDICATORCLEARRANGE, *self._last_command_position)
+        self._last_command_position = (0, 0)
 
     def highlight_error(self, position, chars):
         self.SendScintilla(self.SCI_SETINDICATORCURRENT, self._ERROR_INDICATOR)
@@ -84,6 +92,21 @@ class CodeText(Qsci.QsciScintilla):
         for position, chars in self._error_locations:
             self.SendScintilla(self.SCI_INDICATORCLEARRANGE, position, chars)
         self._error_locations = set()
+
+    def keyPressEvent(self, event):
+        if self._during_visualisation:
+            self.key_during_visualisation.emit()
+        return super().keyPressEvent(event)
+
+    def visualisation_started(self):
+        self.setReadOnly(True)
+        self._during_visualisation = True
+
+    def visualisation_stopped(self):
+        self.setReadOnly(False)
+        self._during_visualisation = False
+        self.remove_highlight_position()
+        self.remove_errors()
 
 
 if __name__ == "__main__":

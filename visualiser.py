@@ -123,10 +123,16 @@ class CommandsWidget(QtWidgets.QWidget):
         self.main_visualiser.command_back()
 
     def pressed_forwards(self):
-        pass
+        self.pressed_pause()
+        steps = self._get_jump_steps()
+        if steps is not None:
+            self.main_visualiser.command_jump_forwards(steps)
 
     def pressed_backwards(self):
-        pass
+        self.pressed_pause()
+        steps = self._get_jump_steps()
+        if steps is not None:
+            self.main_visualiser.command_jump_backwards(steps)
 
     def display_running(self):
         self._display_buttons(
@@ -161,6 +167,13 @@ class CommandsWidget(QtWidgets.QWidget):
             if button.isVisible():
                 self.button_layout.removeWidget(button)
                 button.hide()
+
+    def _get_jump_steps(self):
+        try:
+            return int(self.jump_input.text())
+        except ValueError:
+            self.main_visualiser.set_error('Invalid jump steps')
+            return None
 
 
 class IOWidget(QtWidgets.QWidget):
@@ -207,6 +220,7 @@ class IOWidget(QtWidgets.QWidget):
     def clear_error_text(self):
         if not self.error_text_active:
             return
+        self._error_text_timer.stop()
         self.error_text.clear()
         self.error_text.hide()
         self.error_text_active = False
@@ -258,6 +272,7 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
             self.handle_error(error)
             return False
         else:
+            self.main_visualiser.visualiser_restarted()
             return True
 
     def step(self):
@@ -277,6 +292,7 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
 
     def back(self):
         if self._interpreter is None:
+            raise Exception(f'self._interpreter is None in {type(self)}.back. This shouldn\'t happen')
             return False
 
         try:
@@ -291,6 +307,7 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
 
     def stop(self):
         self._interpreter = None
+        self.main_visualiser.visualiser_stopped()
 
     def handle_error(self, error):
         message = None
@@ -312,6 +329,7 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
         if message is None:
             raise error
 
+        # Make this a signal instead?
         self.main_visualiser.set_error(message, error.location if isinstance(error, interpreters.ProgramError) else None)
 
 
@@ -464,6 +482,7 @@ class MainVisualiser(QtWidgets.QSplitter):
         self.addWidget(self.io_panel)
 
         self.commands_frame.button_pressed.connect(self.button_pressed)
+        self.editor_page.code_text.key_during_visualisation.connect(self.key_during_visualisation)
 
     def set_filetype(self, filetype):
         visualiser_type = self.filetype_to_visualiser[filetype]
@@ -492,6 +511,7 @@ class MainVisualiser(QtWidgets.QSplitter):
 
     def button_pressed(self):
         self.io_panel.clear_error_text()
+        self.editor_page.code_text.remove_errors()
 
     def command_step(self):
         self.visualiser_frame.step()
@@ -526,19 +546,35 @@ class MainVisualiser(QtWidgets.QSplitter):
         return succesful
 
     def command_jump_backwards(self, steps):
-        pass
+        for i in range(steps):
+            if not self.visualiser_frame.back():
+                succesful = False
+                break
+        else:
+            succesful = True
+        self.visualiser_frame.display_visual()
+        self.highlight_current_position()
+        return succesful
 
     def run_signal(self):
         success = self.command_jump_forwards(self.steps_skip + 1)
         if not success:
-            # self.commands_frame.pressed_pause()
             self.commands_frame.display_paused()
             self.command_pause()
 
+    def visualiser_restarted(self):
+        self.editor_page.code_text.visualisation_started()
+
+    def visualiser_stopped(self):
+        self.editor_page.code_text.visualisation_stopped()
+
     def set_error(self, message, location=None):
         self.io_panel.set_error_text(message)
-        if location:
-            pass
+        if location is not None:
+            self.editor_page.code_text.highlight_error(*location)
+
+    def key_during_visualisation(self):
+        self.io_panel.timed_error_text('Please stop visualiser before editing text')
 
     def get_code_text(self):
         return self.editor_page.get_text()
