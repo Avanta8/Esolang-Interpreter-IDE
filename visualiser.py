@@ -375,6 +375,7 @@ class BrainfuckTable(QtWidgets.QTableView):
         self.min_column_width = min_column_width
         self.column_counts = sorted(column_counts, reverse=True)
 
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
         self.setSelectionMode(QtWidgets.QTableView.NoSelection)
@@ -421,6 +422,14 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
         elif role == QtCore.Qt.BackgroundRole:
             if cell_index == self._current_cell_index:
                 return self._current_cell_brush
+        return QtCore.QVariant()
+
+    def headerData(self, section, orientation, role):
+        if role == QtCore.Qt.DisplayRole:
+            if orientation == QtCore.Qt.Horizontal:
+                return section
+            else:
+                return section * self._columns
         return QtCore.QVariant()
 
     def reset(self):
