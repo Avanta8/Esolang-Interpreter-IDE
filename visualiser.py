@@ -599,4 +599,4 @@ class MainVisualiser(QtWidgets.QSplitter):
         self.io_panel.input_text.prev()
 
     def set_output(self, output):
-        print(output)
+        self.io_panel.output_text.setPlainText(output)
