@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from constants import FileTypes
+from input_text import HighlighInputText
 import interpreters
 
 
@@ -190,7 +191,7 @@ class IOWidget(QtWidgets.QWidget):
         self._error_text_timer.setSingleShot(True)
         self._error_text_timer.timeout.connect(self.clear_error_text)
 
-        self.input_text = QtWidgets.QPlainTextEdit(self)
+        self.input_text = HighlighInputText(self)
         self.output_text = QtWidgets.QPlainTextEdit(self)
         self.error_text = QtWidgets.QLineEdit(self)
 
@@ -502,6 +503,8 @@ class MainVisualiser(QtWidgets.QSplitter):
         self.visualiser_frame = visualiser_type(self)
         self.insertWidget(0, self.visualiser_frame)
 
+        self.io_panel.input_text.set_filetype(filetype)
+
     def set_current_position(self, position, chars):
         self._current_command_position = (position, chars)
 
@@ -573,6 +576,7 @@ class MainVisualiser(QtWidgets.QSplitter):
 
     def visualiser_restarted(self):
         self.editor_page.code_text.visualisation_started()
+        self.io_panel.input_text.restart()
 
     def visualiser_stopped(self):
         self.editor_page.code_text.visualisation_stopped()
@@ -589,10 +593,10 @@ class MainVisualiser(QtWidgets.QSplitter):
         return self.editor_page.get_text()
 
     def get_next_input(self):
-        pass
+        return self.io_panel.input_text.next_()
 
     def undo_input(self):
-        pass
+        self.io_panel.input_text.prev()
 
     def set_output(self, output):
         print(output)
