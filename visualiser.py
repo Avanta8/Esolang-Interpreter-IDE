@@ -600,3 +600,7 @@ class MainVisualiser(QtWidgets.QSplitter):
 
     def set_output(self, output):
         self.io_panel.output_text.setPlainText(output)
+
+    def closed(self):
+        self.commands_frame.display_paused()
+        self.command_stop()
