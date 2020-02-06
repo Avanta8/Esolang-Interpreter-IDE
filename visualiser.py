@@ -228,6 +228,7 @@ class IOWidget(QtWidgets.QWidget):
 
 
 class BaseVisualiserWidget(QtWidgets.QWidget):
+    """This class should be subclassed."""
 
     _interpreter_type = None
 
@@ -260,6 +261,9 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
         pass
 
     def restart_interpreter(self):
+        """Initialise a new interpreter.
+        Return whether it was successful.
+        If successful, call `self.main_visualiser.visualiser_restarted`"""
         if self._interpreter_type is None:
             return False
 
@@ -277,6 +281,8 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
             return True
 
     def step(self):
+        """Step once.
+        Return whether it was successful."""
         if self._interpreter is None:
             if not self.restart_interpreter():
                 return False
@@ -292,6 +298,8 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
             return True
 
     def back(self):
+        """Step backwards.
+        Return whether it was successful."""
         if self._interpreter is None:
             raise Exception(f'self._interpreter is None in {type(self)}.back. This shouldn\'t happen')
             return False
@@ -307,10 +315,14 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
             return True
 
     def stop(self):
+        """Delete the interpreter.
+        Call `self.main_visualiser.visualiser_stopped`."""
         self._interpreter = None
         self.main_visualiser.visualiser_stopped()
 
     def handle_error(self, error):
+        """Handle what should happen with `error`.
+        Should call `self.main_visualiser.set_error` if the error is acted on."""
         message = None
         if isinstance(error, interpreters.ExecutionEndedError):
             message = 'Execution finished'
@@ -368,6 +380,9 @@ class BrainfuckVisualiserWidget(BaseVisualiserWidget):
 
 
 class BrainfuckTable(QtWidgets.QTableView):
+    """Table that displays the tape.
+    Emit `size_changed` when the table is resized."""
+
     size_changed = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None, min_column_width=50, column_counts=()):
@@ -388,6 +403,7 @@ class BrainfuckTable(QtWidgets.QTableView):
         self.size_changed.emit(columns)
 
     def _get_columns(self, width):
+        """Return the maximum number of columns that fit in `width`."""
         for column_count in self.column_counts:
             if width / column_count >= self.min_column_width:
                 return column_count
@@ -399,6 +415,7 @@ class BrainfuckTable(QtWidgets.QTableView):
 
 
 class BrainfuckTableModel(QtCore.QAbstractTableModel):
+    """AbstractTableModel for BrainfuckTable"""
 
     _current_cell_brush = QtGui.QBrush(QtGui.QColor('red'))
 
@@ -410,12 +427,17 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
         self.reset()
 
     def rowCount(self, parent):
+        """Return the number of rows."""
         return len(self._tape) // self._columns + (1 if len(self._tape) % self._columns else 0)
 
     def columnCount(self, parent):
+        """Return the number of columns."""
         return self._columns
 
     def data(self, index, role):
+        """If `role` is `DisplayRole`, then return value of the cell at `index`.
+        If `role` is `BackgroundRole`, then return a coloured background if `index`
+        if the current cell."""
         cell_index = index.row() * self._columns + index.column()
         if role == QtCore.Qt.DisplayRole:
             if 0 <= cell_index < len(self._tape):
@@ -426,6 +448,7 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
         return QtCore.QVariant()
 
     def headerData(self, section, orientation, role):
+        """"""
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return section
@@ -434,14 +457,18 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
         return QtCore.QVariant()
 
     def reset(self):
+        """Reset data."""
         self._tape = [0] * 20
         self._current_cell_index = -1
 
     def set_tape(self, interpreter):
+        """`interpreter` should be a BFInterpreter.
+        Set the current data according to the data of the interpreter."""
         self._tape = interpreter.tape
         self._current_cell_index = interpreter.tape_pointer
 
     def display_changes(self):
+        """Method called when changed to layout should be displayed."""
         self.layoutChanged.emit()
 
         # TODO:
@@ -450,6 +477,8 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
         #   This may make it more efficient
 
     def set_columns(self, columns):
+        """Set the number of columns.
+        If the number of columns changed, then emit `self.layoutChanged`."""
         if columns == self._columns:
             return
 
@@ -457,11 +486,14 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
         self.layoutChanged.emit()
 
     def get_current_index(self):
+        """Return a QModelIndex of the current cell."""
         return self.createIndex(self._current_cell_index // self._columns,
                                 self._current_cell_index % self._columns)
 
 
 class MainVisualiser(QtWidgets.QSplitter):
+    """Main visualiser widget that contains each panel that displays widgets.
+    Contols what happens when a button is pressed."""
 
     filetype_to_visualiser = {
         FileTypes.NONE: NoVisualiserWidget,
@@ -499,6 +531,8 @@ class MainVisualiser(QtWidgets.QSplitter):
         if isinstance(self.visualiser_frame, visualiser_type):
             return
 
+        # If the filetype is different, create a new visualiser
+        # corresponding to `filetype`
         self.visualiser_frame.deleteLater()
         self.visualiser_frame = visualiser_type(self)
         self.insertWidget(0, self.visualiser_frame)
@@ -506,12 +540,21 @@ class MainVisualiser(QtWidgets.QSplitter):
         self.io_panel.input_text.set_filetype(filetype)
 
     def set_current_position(self, position, chars):
+        """Set the position in the `code_text` of the current command
+        being executed.
+
+        Arguments:
+            - postition: index of start of command
+            - chars: length of command in characters."""
         self._current_command_position = (position, chars)
 
     def highlight_current_position(self):
+        """Highlight the current position in the code text."""
         self.editor_page.code_text.highlight_position(*self._current_command_position)
 
     def set_runspeed(self):
+        """Method should be called whenever an option relating to runspeed is changed.
+        Recalculate the runspeed."""
         if self.commands_frame.speed_checkbox.isChecked():
             runspeed = 10
             self.steps_skip = self.commands_frame.speed_slider.value() // 5
@@ -522,31 +565,40 @@ class MainVisualiser(QtWidgets.QSplitter):
         self.run_timer.setInterval(runspeed)
 
     def button_pressed(self):
+        """Method should be called whenever a button is pressed.
+        Remove all the error text."""
         self.io_panel.clear_error_text()
         self.editor_page.code_text.remove_errors()
 
     def command_step(self):
+        """Step command"""
         self.visualiser_frame.step()
         self.visualiser_frame.display_visual()
         self.highlight_current_position()
 
     def command_run(self):
+        """Run command"""
         self.run_timer.start()
         self.run_signal()
 
     def command_pause(self):
+        """Pause command"""
         self.run_timer.stop()
 
     def command_stop(self):
+        """Stop command"""
         self.run_timer.stop()
         self.visualiser_frame.stop()
 
     def command_back(self):
+        """Back command"""
         self.visualiser_frame.back()
         self.visualiser_frame.display_visual()
         self.highlight_current_position()
 
     def command_jump_forwards(self, steps):
+        """Jump forwards `steps` steps.
+        Return whether jump was completed without errors from interpreter."""
         for i in range(steps):
             if not self.visualiser_frame.step():
                 succesful = False
@@ -558,6 +610,8 @@ class MainVisualiser(QtWidgets.QSplitter):
         return succesful
 
     def command_jump_backwards(self, steps):
+        """Jump backwards `steps` steps.
+        Return whether jump was completed without errors from interpreter."""
         for i in range(steps):
             if not self.visualiser_frame.back():
                 succesful = False
@@ -569,24 +623,31 @@ class MainVisualiser(QtWidgets.QSplitter):
         return succesful
 
     def run_signal(self):
+        """Method called from `self.run_timer` timout."""
         success = self.command_jump_forwards(self.steps_skip + 1)
         if not success:
             self.commands_frame.display_paused()
             self.command_pause()
 
     def visualiser_restarted(self):
+        """Method should be called whenever a new interpreter is started."""
         self.editor_page.code_text.visualisation_started()
         self.io_panel.input_text.restart()
 
     def visualiser_stopped(self):
+        """Method should be called whenever a new interpreter is destroyed."""
         self.editor_page.code_text.visualisation_stopped()
 
     def set_error(self, message, location=None):
+        """Set an error message `message`.
+        If `location` is given, highlight it in the code text.
+        `location` should be a tuple (start_position, no_of_chars)"""
         self.io_panel.set_error_text(message)
         if location is not None:
             self.editor_page.code_text.highlight_error(*location)
 
     def key_during_visualisation(self):
+        """Key pressed in code text while intepreter is active."""
         self.io_panel.timed_error_text('Please stop visualiser before editing text')
 
     def get_code_text(self):
@@ -602,5 +663,6 @@ class MainVisualiser(QtWidgets.QSplitter):
         self.io_panel.output_text.setPlainText(output)
 
     def closed(self):
+        """Method called when the visualiser containing `self` is closed."""
         self.commands_frame.display_paused()
         self.command_stop()
