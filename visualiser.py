@@ -491,7 +491,7 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
                                 self._current_cell_index % self._columns)
 
 
-class MainVisualiser(QtWidgets.QSplitter):
+class MainVisualiser(QtWidgets.QWidget):
     """Main visualiser widget that contains each panel that displays widgets.
     Contols what happens when a button is pressed."""
 
@@ -500,16 +500,15 @@ class MainVisualiser(QtWidgets.QSplitter):
         FileTypes.BRAINFUCK: BrainfuckVisualiserWidget,
     }
 
-    def __init__(self, parent, orientation=None):
-        if orientation is None:
-            super().__init__(parent)
-        else:
-            super().__init__(orientation, parent)
+    def __init__(self, parent=None, flags=QtCore.Qt.WindowFlags()):
+        super().__init__(parent=parent, flags=flags)
 
         self.editor_page = parent
 
         self.init_widgets()
         self.set_runspeed()
+
+        self.visualiser_stopped()
 
     def init_widgets(self):
         self.run_timer = QtCore.QTimer(self)
@@ -519,9 +518,17 @@ class MainVisualiser(QtWidgets.QSplitter):
         self.commands_frame = CommandsWidget(self)
         self.io_panel = IOWidget(self)
 
-        self.addWidget(self.visualiser_frame)
-        self.addWidget(self.commands_frame)
-        self.addWidget(self.io_panel)
+        self.splitter = QtWidgets.QSplitter(self)
+        self.splitter.addWidget(self.visualiser_frame)
+        self.splitter.addWidget(self.commands_frame)
+        self.splitter.addWidget(self.io_panel)
+
+        self.statusbar = QtWidgets.QStatusBar(self)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addWidget(self.splitter)
+        layout.addWidget(self.statusbar)
+        self.setLayout(layout)
 
         self.commands_frame.button_pressed.connect(self.button_pressed)
         self.editor_page.code_text.key_during_visualisation.connect(self.key_during_visualisation)
@@ -535,7 +542,7 @@ class MainVisualiser(QtWidgets.QSplitter):
         # corresponding to `filetype`
         self.visualiser_frame.deleteLater()
         self.visualiser_frame = visualiser_type(self)
-        self.insertWidget(0, self.visualiser_frame)
+        self.splitter.insertWidget(0, self.visualiser_frame)
 
         self.io_panel.input_text.set_filetype(filetype)
 
@@ -633,10 +640,12 @@ class MainVisualiser(QtWidgets.QSplitter):
         """Method should be called whenever a new interpreter is started."""
         self.editor_page.code_text.visualisation_started()
         self.io_panel.input_text.restart()
+        self.statusbar.showMessage('During execution')
 
     def visualiser_stopped(self):
         """Method should be called whenever a new interpreter is destroyed."""
         self.editor_page.code_text.visualisation_stopped()
+        self.statusbar.showMessage('Visualiser not currently active')
 
     def set_error(self, message, location=None):
         """Set an error message `message`.
