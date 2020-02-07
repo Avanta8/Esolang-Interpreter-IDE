@@ -95,8 +95,6 @@ class StandardInputText(QtWidgets.QPlainTextEdit):
         text = event.text()
         textcursor = self.textCursor()
 
-        # print(key, repr(text))
-
         if text in ASCII_PRINTABLE:
             if self._can_add_text():
                 textcursor.insertText(text, self.default_char_format)
