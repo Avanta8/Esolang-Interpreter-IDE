@@ -172,6 +172,8 @@ class FastBrainfuckInterpreter:
         return ''.join(self.output)
 
     def step(self):
+        if self.finished:
+            raise ExecutionEndedError()
         self.commands[self.command_pointer]()
         self.command_pointer += 1
 
@@ -204,9 +206,11 @@ class FastBrainfuckInterpreter:
 
     def stop(self):
         self.running = False
+        self.finished = True
 
     def reset(self):
-        self.stop()
+        self.running = False
+        self.finished = False
         self.command_pointer = 0
         self.tape_pointer = 0
         self.output = []

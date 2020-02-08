@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from notebook import Notebook
 from visualiser import MainVisualiser
 from code_text import CodeText
+from code_runner import CodeRunner
 
 
 class CloseSignalDockWidget(QtWidgets.QDockWidget):
@@ -28,7 +29,7 @@ class EditorPage(QtWidgets.QMainWindow):
     def init_widgets(self):
         self.code_text = CodeText(self)
         self.visualiser = MainVisualiser(self)
-        self.code_runner = QtWidgets.QWidget(self)
+        self.code_runner = CodeRunner(self)
 
         self.code_runner_dock_widget = CloseSignalDockWidget('Code Runner')
         self.code_runner_dock_widget.setWidget(self.code_runner)
@@ -46,7 +47,7 @@ class EditorPage(QtWidgets.QMainWindow):
 
         self.code_text.set_filetype(filetype)
         self.visualiser.set_filetype(filetype)
-        # self.code_runner.set_filetype(filetype)
+        self.code_runner.set_filetype(filetype)
 
     def get_file_info(self):
         return self.filepath, self.filetype
@@ -67,6 +68,7 @@ class EditorPage(QtWidgets.QMainWindow):
             return
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.code_runner_dock_widget)
         self.code_runner_dock_widget.show()
+        self.code_runner.run_code()
 
 
 class EditorNotebook(Notebook):
