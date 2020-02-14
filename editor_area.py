@@ -57,17 +57,15 @@ class EditorPage(QtWidgets.QMainWindow):
 
     def open_visualiser(self):
         """Dock the `visualiser_dock_widget` if it is not already visible"""
-        if self.visualiser.isVisible():
-            return
-        self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.visualiser_dock_widget)
-        self.visualiser_dock_widget.show()
+        if not self.visualiser.isVisible():
+            self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.visualiser_dock_widget)
+            self.visualiser_dock_widget.show()
 
     def open_code_runner(self):
         """Dock the `code_runner_dock_widget` if it is not already visible"""
-        if self.code_runner.isVisible():
-            return
-        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.code_runner_dock_widget)
-        self.code_runner_dock_widget.show()
+        if not self.code_runner.isVisible():
+            self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.code_runner_dock_widget)
+            self.code_runner_dock_widget.show()
         self.code_runner.run_code()
 
 
