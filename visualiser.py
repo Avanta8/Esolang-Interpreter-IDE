@@ -639,13 +639,13 @@ class MainVisualiser(QtWidgets.QWidget):
     def visualiser_restarted(self):
         """Method should be called whenever a new interpreter is started."""
         self.editor_page.code_text.visualisation_started()
-        self.io_panel.input_text.restart()
         self.statusbar.showMessage('During execution')
 
     def visualiser_stopped(self):
         """Method should be called whenever a new interpreter is destroyed."""
         self.editor_page.code_text.visualisation_stopped()
         self.statusbar.showMessage('Visualiser not currently active')
+        self.io_panel.input_text.restart()
 
     def set_error(self, message, location=None):
         """Set an error message `message`.
