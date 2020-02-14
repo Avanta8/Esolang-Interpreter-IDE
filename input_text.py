@@ -50,6 +50,9 @@ class StandardInputText(QtWidgets.QPlainTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.default_char_format = QtGui.QTextCharFormat()
+        # self.default_char_format.setBackground(QColor(Qt.green))
+
         self._reset()
 
     def restart(self):
@@ -111,9 +114,6 @@ class StandardInputText(QtWidgets.QPlainTextEdit):
 class HighlighInputText(StandardInputText):
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        self.default_char_format = QtGui.QTextCharFormat()
-        # self.default_char_format.setBackground(QColor(Qt.green))
 
         self.highlight_char_format = QtGui.QTextCharFormat()
         self.highlight_char_format.setBackground(QtGui.QColor(QtCore.Qt.gray))
