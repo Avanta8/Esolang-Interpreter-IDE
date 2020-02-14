@@ -9,6 +9,11 @@ import interpreters
 
 class RunnerThread(QtCore.QThread):
 
+    started = QtCore.pyqtSignal()
+    paused = QtCore.pyqtSignal()
+    stopped = QtCore.pyqtSignal()
+    continued = QtCore.pyqtSignal()
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -16,41 +21,53 @@ class RunnerThread(QtCore.QThread):
 
         self.interpreter_type = None
         self._interpreter = None
+        self._run_call_interrupt = False
 
     def run(self):
-        self._running = True
+        self._interpreter_running = True
         try:
-            while self._running:
+            while self._interpreter_running:
+                if self._run_call_interrupt:
+                    self._run_call_interrupt = False
+                    self.stop()
+                    self._start_interpreter()
+                    self._interpreter_running = True
                 self._interpreter.step()
         except interpreters.InterpreterError as error:
             self.handle_error(error)
 
     def stop(self):
-        self._running = False
+        self._interpreter_running = False
+        self._interpreter = None
+        self.stopped.emit()
 
     def run_called(self):
         """Called whenever the code runner is run by the user.
-        Do nothing if currently running. Otherwise, if `self` was paused by waiting for input,
-        then continue. If not, create a new interpreter."""
+        Set the `_run_call_interrupt` flag if currently running. Otherwise, start self, and
+        if there is no current interpreter, create a new interpreter."""
         if self.isRunning():
-            return
-        if self._interpreter is None:
-            self._start_interpreter()
-        self.start()
+            self._run_call_interrupt = True
+        else:
+            if self._interpreter is None:
+                self._start_interpreter()
+            else:
+                self.continued.emit()
+            self.start()
 
     def _start_interpreter(self):
         if self.interpreter_type is None:
             return
         self._interpreter = self.interpreter_type(self.view.get_code_text(),
-                                                  input_func=input,
+                                                  input_func=self.view.get_next_input,
                                                   output_func=self.view.buffer_output)
-        self.view.runner_started()
+        self.started.emit()
 
     def handle_error(self, error):
         if isinstance(error, interpreters.NoInputError):
-            self.view.runner_paused()
+            self._interpreter_running = False
+            self.paused.emit()
         else:
-            self.view.runner_stopped()
+            self.stop()
 
     def set_interpreter_type(self, interpreter_type):
         if interpreter_type is self.interpreter_type:
@@ -77,6 +94,10 @@ class CodeRunner(QtWidgets.QWidget):
     def init_widgets(self):
 
         self.runner = RunnerThread(self)
+        self.runner.started.connect(self.runner_started)
+        self.runner.paused.connect(self.runner_paused)
+        self.runner.stopped.connect(self.runner_stopped)
+        self.runner.continued.connect(self.runner_continued)
 
         self.input_text = StandardInputText(self)
 
@@ -109,19 +130,33 @@ class CodeRunner(QtWidgets.QWidget):
         self.runner.run_called()
 
     def runner_started(self):
-        """Method should be called from `self.runner` whenever it is started."""
+        """Method should be called from `RunnerThread` whenever it is started."""
         self.running = True
+        self.finished = False
+        self.output_text.clear()
+        self._output_buffer.clear()
         self.buffer_timer.start()
 
     def runner_stopped(self):
-        """Method should be called from `self.runner` whenever it is stopped."""
+        """Method should be called from `RunnerThread` whenever it is stopped."""
         self.running = False
+        self.finished = True
+        self.input_text.restart()
 
     def runner_paused(self):
-        """Method should be called from `self.runner` whenever it is paused."""
+        """Method should be called from `RunnerThread` whenever it is paused."""
+        self.running = False
+
+    def runner_continued(self):
+        """Method should be called from `RunnerThread` whenever it is continued."""
+        self.running = True
+        self.buffer_timer.start()
 
     def get_code_text(self):
         return self.editor_page.get_text()
+
+    def get_next_input(self):
+        return self.input_text.next_()
 
     def add_output(self, text):
         self.output_text.moveCursor(QtGui.QTextCursor.End)
@@ -139,4 +174,5 @@ class CodeRunner(QtWidgets.QWidget):
         else:
             if not self.running:
                 self.buffer_timer.stop()
-                self.output_text.appendPlainText('Finished.')
+                if self.finished:
+                    self.output_text.appendPlainText('Finished.')
