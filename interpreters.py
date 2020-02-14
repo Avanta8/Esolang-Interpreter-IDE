@@ -196,7 +196,8 @@ class FastBrainfuckInterpreter:
 
     def accept_input(self):
         input_ = self.input_func()
-        # print('input:', repr(input_))
+        if not input_:
+            raise NoInputError(f'input: {input_}')
         self.tape[self.tape_pointer] = ord(input_) % 256
 
     def add_output(self):
