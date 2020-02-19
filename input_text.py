@@ -17,7 +17,7 @@ class BaseDecoder:
 
 
 class BrainfuckDecoder(BaseDecoder):
-    REGEX = re.compile(r'\\(?:n|r|t|\\|\d{1,3})|.', flags=re.DOTALL)
+    REGEX = re.compile(r'\\(?:n|r|t|\\|\d{1,3})|[^\\]', flags=re.DOTALL)
 
     @classmethod
     def decode_next(cls, text):
@@ -50,8 +50,9 @@ class StandardInputText(QtWidgets.QPlainTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
+
         self.default_char_format = QtGui.QTextCharFormat()
-        # self.default_char_format.setBackground(QColor(Qt.green))
 
         self._reset()
 
@@ -101,6 +102,7 @@ class StandardInputText(QtWidgets.QPlainTextEdit):
         if text in ASCII_PRINTABLE:
             if self._can_add_text():
                 textcursor.insertText(text, self.default_char_format)
+                self.ensureCursorVisible()
         elif key == QtCore.Qt.Key_Backspace:
             if textcursor.hasSelection() and self._can_add_text() or textcursor.position() - 1 >= self.prev_input_indexes[-1]:
                 textcursor.deletePreviousChar()
