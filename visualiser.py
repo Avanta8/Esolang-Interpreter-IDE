@@ -524,7 +524,7 @@ class MainVisualiser(QtWidgets.QWidget):
         self.statusbar = QtWidgets.QStatusBar(self)
 
         layout = QtWidgets.QVBoxLayout(self)
-        layout.addWidget(self.splitter)
+        layout.addWidget(self.splitter, stretch=1)
         layout.addWidget(self.statusbar)
         self.setLayout(layout)
 
