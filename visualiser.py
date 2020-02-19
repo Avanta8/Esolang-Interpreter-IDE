@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from constants import FileTypes
 from input_text import HighlighInputText
+from output_text import OutputText
 import interpreters
 
 
@@ -192,12 +193,9 @@ class IOWidget(QtWidgets.QWidget):
         self._error_text_timer.timeout.connect(self.clear_error_text)
 
         self.input_text = HighlighInputText(self)
-        self.output_text = QtWidgets.QPlainTextEdit(self)
+        self.output_text = OutputText(self)
         self.error_text = QtWidgets.QLineEdit(self)
 
-        self.input_text.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
-        self.output_text.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
-        self.output_text.setReadOnly(True)
         self.error_text.setReadOnly(True)
 
         layout = QtWidgets.QVBoxLayout()
@@ -669,7 +667,7 @@ class MainVisualiser(QtWidgets.QWidget):
         self.io_panel.input_text.prev()
 
     def set_output(self, output):
-        self.io_panel.output_text.setPlainText(output)
+        self.io_panel.output_text.set_text(output)
 
     def closed(self):
         """Method called when the visualiser containing `self` is closed."""
