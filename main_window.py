@@ -55,8 +55,8 @@ class IDE(QtWidgets.QMainWindow):
         if not filepath:
             return
 
-        text = self._read_file(filepath)
-        self.create_new_page(*self._parse_filepath(filepath), text)
+        text = self.read_file(filepath)
+        self.create_new_page(*self.parse_filepath(filepath), text)
 
     def file_save(self):
         current_file_info = self.editor_notebook.get_current_file_info()
@@ -67,7 +67,7 @@ class IDE(QtWidgets.QMainWindow):
         if filepath is None:
             self.file_saveas()
         else:
-            self._write_file(filepath, self.editor_notebook.get_current_text())
+            self.write_file(filepath, self.editor_notebook.get_current_text())
 
     def file_saveas(self):
         if self.editor_notebook.current_tabwidget() is None:
@@ -78,7 +78,7 @@ class IDE(QtWidgets.QMainWindow):
         if not filepath:
             return
 
-        self.editor_notebook.set_current_file_info(*self._parse_filepath(filepath))
+        self.editor_notebook.set_current_file_info(*self.parse_filepath(filepath))
         self.file_save()
 
     def run_code(self):
@@ -91,20 +91,20 @@ class IDE(QtWidgets.QMainWindow):
         self.editor_notebook.new_page(filename=filename, filepath=filepath, filetype=filetype, text=text)
 
     @staticmethod
-    def _read_file(filepath):
+    def read_file(filepath):
         """Read `filepath` and return the contents."""
         with open(filepath, 'r') as file:
             read = file.read()
         return read
 
     @staticmethod
-    def _write_file(filepath, text):
+    def write_file(filepath, text):
         """Write `text` to `filepath`."""
         with open(filepath, 'w') as file:
             file.write(text)
 
     @staticmethod
-    def _parse_filepath(filepath):
+    def parse_filepath(filepath):
         """Return filename, filepath, filetype"""
         extension = os.path.splitext(filepath)[1]
         filetype = FileTypes.from_extension(extension)
