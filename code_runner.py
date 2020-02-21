@@ -226,5 +226,5 @@ class CodeRunner(QtWidgets.QWidget):
         else:
             if not self.running:
                 self.buffer_timer.stop()
-                if self.finished:
-                    self.output_text.appendPlainText('Finished.')
+                # if self.finished:
+                #     self.output_text.appendPlainText('Finished.')
