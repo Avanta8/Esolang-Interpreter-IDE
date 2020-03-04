@@ -187,8 +187,8 @@ class FastBrainfuckInterpreter:
 
     def pointer_op(self, times):
         self.tape_pointer += times
-        if self.tape_pointer < 0:
-            raise ProgramRuntimeError(ErrorTypes.INVALID_TAPE_CELL)
+        if not 0 <= self.tape_pointer < 40000:
+            raise ProgramRuntimeError(ErrorTypes.INVALID_TAPE_CELL, location=self.tape_pointer)
 
     def cell_op(self, times):
         self.tape[self.tape_pointer] = (
