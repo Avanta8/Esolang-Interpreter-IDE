@@ -100,6 +100,8 @@ class RunnerThread(QtCore.QThread):
                 message = 'Unmatched closing parentheses'
             elif error_type is interpreters.ErrorTypes.INVALID_TAPE_CELL:
                 message = 'Tape pointer out of bounds'
+            if error.location:
+                message += f' at location {error.location}'
             self.stop()
         else:
             message = 'An unknown error occurred.'
@@ -176,9 +178,6 @@ class CodeRunner(QtWidgets.QWidget):
         self.finished = False
         self.output_text.clear()
         self._output_buffer.clear()
-        # self.running = True
-        # self.buffer_timer.start()
-        # self.statusbar.showMessage('Running')
         self.runner_continued()
 
     def runner_stopped(self):
@@ -200,11 +199,11 @@ class CodeRunner(QtWidgets.QWidget):
         self.running = True
         self.buffer_timer.start()
         self.statusbar.showMessage('Running')
+        self.error = ''
         self.error_text.hide()
 
     def runner_error(self, text):
-        self.error_text.setText(text)
-        self.error_text.show()
+        self.error = text
 
     def get_code_text(self):
         return self.editor_page.get_text()
@@ -226,5 +225,7 @@ class CodeRunner(QtWidgets.QWidget):
         else:
             if not self.running:
                 self.buffer_timer.stop()
-                # if self.finished:
-                #     self.output_text.appendPlainText('Finished.')
+                if self.error:
+                    self.error_text.setText(self.error)
+                    self.error_text.show()
+                    self.error = ''
