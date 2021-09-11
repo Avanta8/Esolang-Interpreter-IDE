@@ -5,6 +5,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from constants import FileTypes
 from editor_area import EditorNotebook
 
+# Look at: https://doc.qt.io/qtforpython/overviews/model-view-programming.html#using-views-with-an-existing-model
+# for file system view
+
 
 class IDE(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
