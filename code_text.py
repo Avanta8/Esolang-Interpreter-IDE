@@ -31,7 +31,7 @@ class CodeText(Qsci.QsciScintilla):
         self._during_visualisation = False
 
     def init_settings(self):
-        # self.setEolMode(Qsci.QsciScintilla.SC_EOL_LF)
+        self.setEolMode(Qsci.QsciScintilla.SC_EOL_LF)
         self.setWrapMode(Qsci.QsciScintilla.WrapNone)
         # self.setEolVisibility(True)
 
