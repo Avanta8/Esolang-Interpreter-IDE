@@ -91,6 +91,17 @@ class Notebook(QtWidgets.QWidget):
             return None
         return self._current_tabwidget.currentWidget()
 
+    def get_all_pages(self):
+        """Return all pages currently held by the Notebook.
+        NOTE: NOT FULLY TESTED YET!!"""
+        pages = []
+        for tab_widget in self.findChildren(_NotebookTabWidget):
+            num_pages = tab_widget.count()
+            for i in range(num_pages):
+                pages.append(tab_widget.widget(i))
+
+        return pages
+
 
 class _NotebookSplitter(QtWidgets.QSplitter):
     """Splitter that contains `NotebookTabWidget`s or other `ChildNotebookSplitter`s
