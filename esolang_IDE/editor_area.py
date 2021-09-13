@@ -17,10 +17,13 @@ class CloseSignalDockWidget(QtWidgets.QDockWidget):
 
 class EditorPage(QtWidgets.QMainWindow):
 
-    text_changed = QtCore.pyqtSignal()
+    text_changed = QtCore.pyqtSignal(QtWidgets.QWidget)
 
     def __init__(self, fileinfo, text, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # TODO:
+        # Perhaps disable the visualiser and code runner fileinfo.filetype is None.
 
         self.init_widgets()
 
@@ -29,12 +32,14 @@ class EditorPage(QtWidgets.QMainWindow):
         if text:
             self.code_text.setText(text)
 
+        self._text_has_changed = False
+
     def init_widgets(self):
         self.code_text = CodeText(self)
         self.visualiser = MainVisualiser(self)
         self.code_runner = CodeRunner(self)
 
-        self.code_text.textChanged.connect(self.text_changed.emit)
+        self.code_text.textChanged.connect(self._code_text_changed)
 
         self.code_runner_dock_widget = CloseSignalDockWidget('Code Runner')
         self.code_runner_dock_widget.setWidget(self.code_runner)
@@ -45,6 +50,8 @@ class EditorPage(QtWidgets.QMainWindow):
         self.visualiser_dock_widget.close_signal.connect(self.visualiser.closed)
 
         self.setCentralWidget(self.code_text)
+
+        self._text_has_changed = False
 
     def set_fileinfo(self, fileinfo):
         self.fileinfo = fileinfo
@@ -74,23 +81,50 @@ class EditorPage(QtWidgets.QMainWindow):
             self.code_runner_dock_widget.show()
         self.code_runner.run_code()
 
+    def _code_text_changed(self):
+        if self._text_has_changed:
+            return
+
+        self.text_changed.emit(self)
+        self._text_has_changed = True
+
+    def code_text_unchanged(self):
+        self._text_has_changed = False
+
 
 class EditorNotebook(Notebook):
     def new_page(self, fileinfo, text):
         page = EditorPage(fileinfo, text)
         self.add_tab_to_current(page, fileinfo.filename or 'Untitled')
 
+        page.text_changed.connect(self._page_text_changed)
+
+    def _page_text_changed(self, page):
+        filename = page.get_fileinfo().filename
+        self.set_page_tab_text(page, f'*. {filename}')
+
     def set_current_fileinfo(self, fileinfo):
         tabwidget = self.current_tabwidget()
-        if tabwidget is not None:
-            index = tabwidget.currentIndex()
-            tabwidget.setTabText(index, fileinfo.filename)
-            tabwidget.widget(index).set_fileinfo(fileinfo)
+        if tabwidget is None:
+            return
+
+        index = tabwidget.currentIndex()
+        tabwidget.setTabText(index, fileinfo.filename)
+        self.current_page().set_fileinfo(fileinfo)
 
     def get_current_fileinfo(self):
         page = self.current_page()
         if page is None:
             return None
+
+        # This is assuming that we always get the fileinfo for saving the file,
+        # which means that we can mark the page as not changed (remove the
+        # asterisk from the tab bar text).
+        # However, if in the future, this is method accessed for other reasons,
+        # this should be changed.
+        page.code_text_unchanged()
+        self.set_page_tab_text(page, page.get_fileinfo().filename)
+
         return page.get_fileinfo()
 
     def get_current_text(self):

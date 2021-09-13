@@ -95,12 +95,22 @@ class Notebook(QtWidgets.QWidget):
         """Return all pages currently held by the Notebook.
         NOTE: NOT FULLY TESTED YET!!"""
         pages = []
-        for tab_widget in self.findChildren(_NotebookTabWidget):
-            num_pages = tab_widget.count()
+        for tabwidget in self.findChildren(_NotebookTabWidget):
+            num_pages = tabwidget.count()
             for i in range(num_pages):
-                pages.append(tab_widget.widget(i))
+                pages.append(tabwidget.widget(i))
 
         return pages
+
+    def set_page_tab_text(self, page, tabtext):
+        """Set the text for the tab bar corresponding to `page` to `tabtext`."""
+        for tabwidget in self.findChildren(_NotebookTabWidget):
+            num_pages = tabwidget.count()
+            for i in range(num_pages):
+                current_page = tabwidget.widget(i)
+                if page is current_page:
+                    tabwidget.setTabText(i, tabtext)
+                    return
 
 
 class _NotebookSplitter(QtWidgets.QSplitter):
