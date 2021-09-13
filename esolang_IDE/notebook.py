@@ -27,6 +27,9 @@ class _DropLocations(enum.Enum):
 
 
 class Notebook(QtWidgets.QWidget):
+    """Notebook in which you can drag tabs to and from other notebooks.
+    You can also split the notebook by dragging tiles to the side."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -74,7 +77,10 @@ class Notebook(QtWidgets.QWidget):
     def set_current_tabwidget(self, tabwidget):
         """Set the current tabwidget to `tabwidget`. If `tabwidget` is not
         in the notebook, then raise a `ValueError`."""
-        if not isinstance(tabwidget, _NotebookTabWidget) or tabwidget.notebook is not self:
+        if (
+            not isinstance(tabwidget, _NotebookTabWidget)
+            or tabwidget.notebook is not self
+        ):
             raise ValueError('Notebook is not the parent of tabwidget')
         self._current_tabwidget = tabwidget
 
@@ -148,7 +154,9 @@ class _NotebookSplitter(QtWidgets.QSplitter):
                 # Need to create new NotebookSplitter with required orientation.
                 # Add `notebook` to that splitter, and then insert the new tab.
                 # Insert the new splitter in `self` replacing `Notebook`.
-                new_splitter = _ChildNotebookSplitter(insert_orientation, notebook=self.notebook)
+                new_splitter = _ChildNotebookSplitter(
+                    insert_orientation, notebook=self.notebook
+                )
                 new_splitter.replace_splitter_signal.connect(self._replace_splitter)
                 new_splitter.addWidget(notebook)
                 new_splitter.insert_tab(notebook, location, drag_info)
@@ -171,6 +179,7 @@ class _ChildNotebookSplitter(_NotebookSplitter):
     Emit a `replace_splitter_signal` if a widget is removed and the count is 1.
     Delete `self` if a widget is removed and there are no other widgets being
     displayed by `self`."""
+
     replace_splitter_signal = QtCore.pyqtSignal(_NotebookSplitter)
 
     def childEvent(self, event):
@@ -217,7 +226,9 @@ class _NotebookTabWidget(QtWidgets.QTabWidget):
         self.currentChanged.connect(self.current_tab_changed)
 
         self._rubberband = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle, self)
-        self._stackedwidget = self.findChild(QtWidgets.QStackedWidget)  # Widget that displays the pages.
+        self._stackedwidget = self.findChild(
+            QtWidgets.QStackedWidget
+        )  # Widget that displays the pages.
 
     def close_tab(self, index):
         """Called when the X is pressed on one of the tabs.
@@ -238,7 +249,7 @@ class _NotebookTabWidget(QtWidgets.QTabWidget):
             event.accept()
 
     def dragMoveEvent(self, event):
-        """"Display the rubberband showing where the tab will end up
+        """ "Display the rubberband showing where the tab will end up
         if the drag was to be dropped."""
         location, rect, _ = self._get_drop_location(event.pos())
 
@@ -413,9 +424,12 @@ class _NotebookTabBar(QtWidgets.QTabBar):
         """If it is a leftmouseclick, store a draginfo."""
         if event.button() == QtCore.Qt.LeftButton:
             tab_index = self.tabAt(event.pos())
-            self.drag_info = _DragInfo(event.pos(), tab_index,
-                                       self._tabwidget.widget(tab_index),
-                                       self.tabText(tab_index))
+            self.drag_info = _DragInfo(
+                event.pos(),
+                tab_index,
+                self._tabwidget.widget(tab_index),
+                self.tabText(tab_index),
+            )
 
         return super().mousePressEvent(event)
 
@@ -423,9 +437,11 @@ class _NotebookTabBar(QtWidgets.QTabBar):
         """If the mouse is pressed and has moved far enough, start a drag."""
         # Pressed buttons don't include lmb, or tab not selected at start of drag, or
         # not reached min drag distance.
-        if (event.buttons() | QtCore.Qt.LeftButton) != event.buttons() \
-                or self.drag_info.tab_index == -1 \
-                or QtCore.QLineF(event.pos(), self.drag_info.initial_pos).length() < 10:
+        if (
+            (event.buttons() | QtCore.Qt.LeftButton) != event.buttons()
+            or self.drag_info.tab_index == -1
+            or QtCore.QLineF(event.pos(), self.drag_info.initial_pos).length() < 10
+        ):
             return super().mouseMoveEvent(event)
 
         tab_rect = self.tabRect(self.drag_info.tab_index)
@@ -459,7 +475,7 @@ class _DragInfo:
         - `tab_index`: tab index that was clicked (or -1 if no tab clicked),
         - `widget`: widget corresponding to the `tab_index`,
         - `tabname`: tab name corresponding to the `tab_index`
-        """
+    """
 
     def __init__(self, initial_pos=None, tab_index=-1, widget=None, tabname=''):
         super().__init__()

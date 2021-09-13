@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from notebook import Notebook
-from visualiser import MainVisualiser
+from visualisers import MainVisualiser
 from code_text import CodeText
 from code_runner import CodeRunner
 
@@ -64,16 +64,20 @@ class EditorPage(QtWidgets.QMainWindow):
     def open_code_runner(self):
         """Dock the `code_runner_dock_widget` if it is not already visible"""
         if not self.code_runner.isVisible():
-            self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.code_runner_dock_widget)
+            self.addDockWidget(
+                QtCore.Qt.BottomDockWidgetArea, self.code_runner_dock_widget
+            )
             self.code_runner_dock_widget.show()
         self.code_runner.run_code()
 
 
 class EditorNotebook(Notebook):
-
     def new_page(self, filename, filepath, filetype, text):
         # self.add_tab(EditorPage(filepath=filepath, filetype=filetype, text=text), filename or 'Untitled')
-        self.add_tab_to_current(EditorPage(filepath=filepath, filetype=filetype, text=text), filename or 'Untitled')
+        self.add_tab_to_current(
+            EditorPage(filepath=filepath, filetype=filetype, text=text),
+            filename or 'Untitled',
+        )
 
     def set_current_file_info(self, filename, filepath, filetype):
         tabwidget = self.current_tabwidget()

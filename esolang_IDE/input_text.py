@@ -104,7 +104,11 @@ class StandardInputText(QtWidgets.QPlainTextEdit):
                 textcursor.insertText(text, self.default_char_format)
                 self.ensureCursorVisible()
         elif key == QtCore.Qt.Key_Backspace:
-            if textcursor.hasSelection() and self._can_add_text() or textcursor.position() - 1 >= self.prev_input_indexes[-1]:
+            if (
+                textcursor.hasSelection()
+                and self._can_add_text()
+                or textcursor.position() - 1 >= self.prev_input_indexes[-1]
+            ):
                 textcursor.deletePreviousChar()
         elif key == QtCore.Qt.Key_Delete:
             if self._can_add_text():

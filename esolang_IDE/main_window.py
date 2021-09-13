@@ -31,7 +31,12 @@ class IDE(QtWidgets.QMainWindow):
             ),
             'Run': (
                 (('Run code', self), ('Ctrl+B',), ('Run code',), (self.run_code,)),
-                (('Open visualiser', self), ('Ctrl+Shift+B',), ('Visualise run code',), (self.open_visualier,)),
+                (
+                    ('Open visualiser', self),
+                    ('Ctrl+Shift+B',),
+                    ('Visualise run code',),
+                    (self.open_visualier,),
+                ),
             ),
         }
 
@@ -54,7 +59,9 @@ class IDE(QtWidgets.QMainWindow):
         self.create_new_page()
 
     def file_open(self):
-        filepath, extension = QtWidgets.QFileDialog.getOpenFileName(self, filter=self._file_dialog_filter)
+        filepath, extension = QtWidgets.QFileDialog.getOpenFileName(
+            self, filter=self._file_dialog_filter
+        )
         if not filepath:
             return
 
@@ -76,7 +83,9 @@ class IDE(QtWidgets.QMainWindow):
         if self.editor_notebook.current_tabwidget() is None:
             return
 
-        filepath, extension = QtWidgets.QFileDialog.getSaveFileName(self, filter=self._file_dialog_filter)
+        filepath, extension = QtWidgets.QFileDialog.getSaveFileName(
+            self, filter=self._file_dialog_filter
+        )
 
         if not filepath:
             return
@@ -90,8 +99,12 @@ class IDE(QtWidgets.QMainWindow):
     def open_visualier(self):
         self.editor_notebook.open_visualiser()
 
-    def create_new_page(self, filename=None, filepath=None, filetype=FileTypes.NONE, text=''):
-        self.editor_notebook.new_page(filename=filename, filepath=filepath, filetype=filetype, text=text)
+    def create_new_page(
+        self, filename=None, filepath=None, filetype=FileTypes.NONE, text=''
+    ):
+        self.editor_notebook.new_page(
+            filename=filename, filepath=filepath, filetype=filetype, text=text
+        )
 
     @staticmethod
     def read_file(filepath):
@@ -122,3 +135,9 @@ def main():
 
 
 main()
+
+
+"""
+TODO:
+- Show when a file has changed. (star on top)
+"""

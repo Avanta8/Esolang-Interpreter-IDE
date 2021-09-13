@@ -77,9 +77,11 @@ class RunnerThread(QtCore.QThread):
             return
         self.started.emit()
         try:
-            self._interpreter = self.interpreter_type(self.view.get_code_text(),
-                                                      input_func=self.view.get_next_input,
-                                                      output_func=self.view.buffer_output)
+            self._interpreter = self.interpreter_type(
+                self.view.get_code_text(),
+                input_func=self.view.get_next_input,
+                output_func=self.view.buffer_output,
+            )
         except interpreters.ProgramSyntaxError as error:
             self.handle_error(error)
         else:

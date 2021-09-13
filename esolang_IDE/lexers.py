@@ -44,8 +44,7 @@ class NoneLexer(_LanguageLexer):
     _styles = [
         (
             'none',
-            {
-            },
+            {},
         ),
     ]
 
