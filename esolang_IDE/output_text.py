@@ -6,8 +6,8 @@ class OutputText(QtWidgets.QPlainTextEdit):
         super().__init__(*args, **kwargs)
 
         font = QtGui.QFont()
-        font.setPointSize(9)
-        font.setFamily('Source Code Pro')
+        font.setPointSize(10)
+        font.setFamily('Consolas')
         self.setFont(font)
         self.setReadOnly(True)
         self.setMaximumBlockCount(1000)

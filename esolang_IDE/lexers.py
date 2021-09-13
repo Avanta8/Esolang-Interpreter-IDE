@@ -3,7 +3,9 @@ from PyQt5 import Qsci, QtCore, QtGui
 
 class _LanguageLexer(Qsci.QsciLexerCustom):
 
-    _default_font = QtGui.QFont('Source Code Pro', 10)
+    # _default_font = QtGui.QFont('Source Code Pro', 10)
+    # _default_font = QtGui.QFont('Fira Code', 10)
+    _default_font = QtGui.QFont('Consolas', 10)
     _default_colour = QtGui.QColor('black')
 
     _styles = []
