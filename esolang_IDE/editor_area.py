@@ -16,12 +16,15 @@ class CloseSignalDockWidget(QtWidgets.QDockWidget):
 
 
 class EditorPage(QtWidgets.QMainWindow):
-    def __init__(self, *args, filepath, filetype, text, **kwargs):
+
+    text_changed = QtCore.pyqtSignal()
+
+    def __init__(self, fileinfo, text, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.init_widgets()
 
-        self.set_file_info(filepath, filetype)
+        self.set_fileinfo(fileinfo)
 
         if text:
             self.code_text.setText(text)
@@ -30,6 +33,8 @@ class EditorPage(QtWidgets.QMainWindow):
         self.code_text = CodeText(self)
         self.visualiser = MainVisualiser(self)
         self.code_runner = CodeRunner(self)
+
+        self.code_text.textChanged.connect(self.text_changed.emit)
 
         self.code_runner_dock_widget = CloseSignalDockWidget('Code Runner')
         self.code_runner_dock_widget.setWidget(self.code_runner)
@@ -41,16 +46,15 @@ class EditorPage(QtWidgets.QMainWindow):
 
         self.setCentralWidget(self.code_text)
 
-    def set_file_info(self, filepath, filetype):
-        self.filepath = filepath
-        self.filetype = filetype
+    def set_fileinfo(self, fileinfo):
+        self.fileinfo = fileinfo
 
-        self.code_text.set_filetype(filetype)
-        self.visualiser.set_filetype(filetype)
-        self.code_runner.set_filetype(filetype)
+        self.code_text.set_filetype(fileinfo.filetype)
+        self.visualiser.set_filetype(fileinfo.filetype)
+        self.code_runner.set_filetype(fileinfo.filetype)
 
-    def get_file_info(self):
-        return self.filepath, self.filetype
+    def get_fileinfo(self):
+        return self.fileinfo
 
     def get_text(self):
         return self.code_text.text()
@@ -72,25 +76,22 @@ class EditorPage(QtWidgets.QMainWindow):
 
 
 class EditorNotebook(Notebook):
-    def new_page(self, filename, filepath, filetype, text):
-        # self.add_tab(EditorPage(filepath=filepath, filetype=filetype, text=text), filename or 'Untitled')
-        self.add_tab_to_current(
-            EditorPage(filepath=filepath, filetype=filetype, text=text),
-            filename or 'Untitled',
-        )
+    def new_page(self, fileinfo, text):
+        page = EditorPage(fileinfo, text)
+        self.add_tab_to_current(page, fileinfo.filename or 'Untitled')
 
-    def set_current_file_info(self, filename, filepath, filetype):
+    def set_current_fileinfo(self, fileinfo):
         tabwidget = self.current_tabwidget()
         if tabwidget is not None:
             index = tabwidget.currentIndex()
-            tabwidget.setTabText(index, filename)
-            tabwidget.widget(index).set_file_info(filepath, filetype)
+            tabwidget.setTabText(index, fileinfo.filename)
+            tabwidget.widget(index).set_fileinfo(fileinfo)
 
-    def get_current_file_info(self):
+    def get_current_fileinfo(self):
         page = self.current_page()
         if page is None:
             return None
-        return page.get_file_info()
+        return page.get_fileinfo()
 
     def get_current_text(self):
         page = self.current_page()

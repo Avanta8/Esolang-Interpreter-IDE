@@ -5,6 +5,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from constants import FileTypes
 from editor_area import EditorNotebook
 
+from file_info import FileInfo
+
 # Look at: https://doc.qt.io/qtforpython/overviews/model-view-programming.html#using-views-with-an-existing-model
 # for file system view
 
@@ -56,7 +58,7 @@ class IDE(QtWidgets.QMainWindow):
         self.setCentralWidget(self.editor_notebook)
 
     def file_new(self):
-        self.create_new_page()
+        self.create_new_page(FileInfo.from_empty())
 
     def file_open(self):
         filepath, extension = QtWidgets.QFileDialog.getOpenFileName(
@@ -65,19 +67,18 @@ class IDE(QtWidgets.QMainWindow):
         if not filepath:
             return
 
-        text = self.read_file(filepath)
-        self.create_new_page(*self.parse_filepath(filepath), text)
+        fileinfo = FileInfo.from_filepath(filepath)
+        self.create_new_page(fileinfo, fileinfo.read())
 
     def file_save(self):
-        current_file_info = self.editor_notebook.get_current_file_info()
-        if current_file_info is None:
+        fileinfo = self.editor_notebook.get_current_fileinfo()
+        if fileinfo is None:  # No currently selected tab
             return
 
-        filepath, _ = current_file_info
-        if filepath is None:
+        if fileinfo.is_empty():
             self.file_saveas()
         else:
-            self.write_file(filepath, self.editor_notebook.get_current_text())
+            fileinfo.write(self.editor_notebook.get_current_text())
 
     def file_saveas(self):
         if self.editor_notebook.current_tabwidget() is None:
@@ -90,7 +91,8 @@ class IDE(QtWidgets.QMainWindow):
         if not filepath:
             return
 
-        self.editor_notebook.set_current_file_info(*self.parse_filepath(filepath))
+        fileinfo = FileInfo.from_filepath(filepath)
+        self.editor_notebook.set_current_fileinfo(fileinfo)
         self.file_save()
 
     def run_code(self):
@@ -99,42 +101,8 @@ class IDE(QtWidgets.QMainWindow):
     def open_visualier(self):
         self.editor_notebook.open_visualiser()
 
-    def create_new_page(
-        self, filename=None, filepath=None, filetype=FileTypes.NONE, text=''
-    ):
-        self.editor_notebook.new_page(
-            filename=filename, filepath=filepath, filetype=filetype, text=text
-        )
-
-    @staticmethod
-    def read_file(filepath):
-        """Read `filepath` and return the contents."""
-        with open(filepath, 'r') as file:
-            read = file.read()
-        return read
-
-    @staticmethod
-    def write_file(filepath, text):
-        """Write `text` to `filepath`."""
-        with open(filepath, 'w') as file:
-            file.write(text)
-
-    @staticmethod
-    def parse_filepath(filepath):
-        """Return filename, filepath, filetype"""
-        extension = os.path.splitext(filepath)[1]
-        filetype = FileTypes.from_extension(extension)
-        filename = os.path.basename(filepath)
-        return filename, filepath, filetype
-
-
-def main():
-    app = QtWidgets.QApplication([])
-    _ = IDE()
-    app.exec_()
-
-
-main()
+    def create_new_page(self, fileinfo, text=''):
+        self.editor_notebook.new_page(fileinfo, text)
 
 
 """
