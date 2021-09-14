@@ -8,6 +8,7 @@ class CodeText(Qsci.QsciScintilla):
 
     _LEXERS = {
         FileTypes.NONE: lexers.NoneLexer,
+        FileTypes.TEXT: lexers.NoneLexer,
         FileTypes.BRAINFUCK: lexers.BrainfuckLexer,
         FileTypes.PYTHON: lexers.NoneLexer,
     }

@@ -30,6 +30,8 @@ class Notebook(QtWidgets.QWidget):
     """Notebook in which you can drag tabs to and from other notebooks.
     You can also split the notebook by dragging tiles to the side."""
 
+    page_closed = QtCore.pyqtSignal(QtWidgets.QWidget)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -258,6 +260,7 @@ class _NotebookTabWidget(QtWidgets.QTabWidget):
         self.removeTab(index)
         widget.hide()
         widget.deleteLater()
+        self.notebook.page_closed.emit(widget)
 
     def current_tab_changed(self, index):
         """Called when the current tab is changed. Set the current tabwidget in `self.notebook`
