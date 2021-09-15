@@ -1,4 +1,4 @@
-from interpreters.errors import (
+from .errors import (
     ErrorTypes,
     ExecutionEndedError,
     InterpreterError,
@@ -9,4 +9,4 @@ from interpreters.errors import (
     ProgramSyntaxError,
 )
 
-from interpreters.brainfuck import BrainfuckInterpreter, FastBrainfuckInterpreter
+from .brainfuck import BrainfuckInterpreter, FastBrainfuckInterpreter

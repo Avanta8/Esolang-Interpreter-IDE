@@ -1,8 +1,9 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from visualisers.visualiser_widgets.base_visualiser_widget import BaseVisualiserWidget
-
 import interpreters
+
+from .base_visualiser_widget import BaseVisualiserWidget
+
 
 
 class BrainfuckVisualiserWidget(BaseVisualiserWidget):

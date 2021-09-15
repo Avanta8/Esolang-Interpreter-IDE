@@ -1,7 +1,7 @@
 import functools
 from collections import deque
 
-from interpreters.errors import (
+from .errors import (
     ErrorTypes,
     ExecutionEndedError,
     NoInputError,

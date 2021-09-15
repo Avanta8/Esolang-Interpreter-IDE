@@ -1,1 +1,1 @@
-from visualisers.main_visualiser import MainVisualiser
+from .main_visualiser import MainVisualiser
