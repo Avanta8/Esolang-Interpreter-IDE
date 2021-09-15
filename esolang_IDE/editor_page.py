@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from visualisers import MainVisualiser
+from controllers.visualiser_controller import VisualiserController
 from code_text import CodeText
 from code_runner import CodeRunner
 
@@ -32,8 +32,11 @@ class EditorPage(QtWidgets.QMainWindow):
             self.code_text.setText(text)
 
     def init_widgets(self):
+
         self.code_text = CodeText(self)
-        self.visualiser = MainVisualiser(self)
+        self.visualiser_controller = VisualiserController(self.code_text)
+
+        self.visualiser = self.visualiser_controller.get_visualiser()
         self.code_runner = CodeRunner(self)
 
         self.code_text.textChanged.connect(self._code_text_changed)
@@ -54,9 +57,10 @@ class EditorPage(QtWidgets.QMainWindow):
         self._filetype = filetype
 
         self.code_text.set_filetype(filetype)
-        self.visualiser.set_filetype(filetype)
+        # self.visualiser.set_filetype(filetype)
         self.code_runner.set_filetype(filetype)
 
+        self.visualiser_controller.set_filetype(filetype)
 
     def get_text(self):
         return self.code_text.text()

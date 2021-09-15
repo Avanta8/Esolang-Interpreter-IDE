@@ -148,6 +148,10 @@ class BrainfuckInterpreter:
         if self.output_func:
             self.output_func(self.output)
 
+    def get_visual(self):
+        """Information for visualiser"""
+        return self.tape, self.tape_pointer
+
     @property
     def current_cell(self):
         return self.tape[self.tape_pointer]

@@ -10,3 +10,4 @@ from .errors import (
 )
 
 from .brainfuck import BrainfuckInterpreter, FastBrainfuckInterpreter
+from .base_interpreter import BaseInterpreter

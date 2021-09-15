@@ -3,15 +3,10 @@ from PyQt5 import QtCore, QtWidgets
 
 class CommandsWidget(QtWidgets.QWidget):
 
-    button_pressed = QtCore.pyqtSignal()
-
     def __init__(self, parent=None, flags=QtCore.Qt.WindowFlags()):
         super().__init__(parent=parent, flags=flags)
 
-        self.main_visualiser = parent
-
         self.init_widgets()
-        self._connect_signals()
 
         self.display_stopped()
 
@@ -86,56 +81,6 @@ class CommandsWidget(QtWidgets.QWidget):
         groupbox.setLayout(speed_layout)
         return groupbox
 
-    def _connect_signals(self):
-        self.run_button.clicked.connect(self.pressed_run)
-        self.continue_button.clicked.connect(self.pressed_run)
-        self.step_button.clicked.connect(self.pressed_step)
-        self.pause_button.clicked.connect(self.pressed_pause)
-        self.back_button.clicked.connect(self.pressed_back)
-        self.stop_button.clicked.connect(self.pressed_stop)
-        self.forwards_button.clicked.connect(self.pressed_forwards)
-        self.backwards_button.clicked.connect(self.pressed_backwards)
-
-        self.speed_slider.valueChanged.connect(self.main_visualiser.set_runspeed)
-        self.speed_checkbox.stateChanged.connect(self.main_visualiser.set_runspeed)
-
-    def pressed_run(self):
-        self.button_pressed.emit()
-        self.display_running()
-        self.main_visualiser.command_run()
-
-    def pressed_step(self):
-        self.button_pressed.emit()
-        self.display_paused()
-        self.main_visualiser.command_step()
-
-    def pressed_stop(self):
-        self.button_pressed.emit()
-        self.display_stopped()
-        self.main_visualiser.command_stop()
-
-    def pressed_pause(self):
-        self.button_pressed.emit()
-        self.display_paused()
-        self.main_visualiser.command_pause()
-
-    def pressed_back(self):
-        self.button_pressed.emit()
-        self.display_paused()
-        self.main_visualiser.command_back()
-
-    def pressed_forwards(self):
-        self.pressed_pause()
-        steps = self._get_jump_steps()
-        if steps is not None:
-            self.main_visualiser.command_jump_forwards(steps)
-
-    def pressed_backwards(self):
-        self.pressed_pause()
-        steps = self._get_jump_steps()
-        if steps is not None:
-            self.main_visualiser.command_jump_backwards(steps)
-
     def display_running(self):
         self._display_buttons(
             self.stop_button,
@@ -169,10 +114,3 @@ class CommandsWidget(QtWidgets.QWidget):
             if button.isVisible():
                 self.button_layout.removeWidget(button)
                 button.hide()
-
-    def _get_jump_steps(self):
-        try:
-            return int(self.jump_input.text())
-        except ValueError:
-            self.main_visualiser.set_error('Invalid jump steps')
-            return None

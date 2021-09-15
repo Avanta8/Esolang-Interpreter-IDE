@@ -1,14 +1,10 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-import interpreters
-
 from .base_visualiser_widget import BaseVisualiserWidget
 
 
 
 class BrainfuckVisualiserWidget(BaseVisualiserWidget):
-
-    _interpreter_type = interpreters.BrainfuckInterpreter
 
     def __init__(self, parent=None, flags=QtCore.Qt.WindowFlags()):
         super().__init__(parent=parent, flags=flags)
@@ -27,8 +23,8 @@ class BrainfuckVisualiserWidget(BaseVisualiserWidget):
     def reset_visual(self):
         self.table_model.reset()
 
-    def configure_visual(self):
-        self.table_model.set_tape(self._interpreter)
+    def configure_visual(self, visual_info):
+        self.table_model.set_tape(visual_info)
 
     def display_visual(self):
         self.table_model.display_changes()
@@ -119,11 +115,10 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
         self._tape = [0] * 20
         self._current_cell_index = -1
 
-    def set_tape(self, interpreter):
+    def set_tape(self, visual_info):
         """`interpreter` should be a BFInterpreter.
         Set the current data according to the data of the interpreter."""
-        self._tape = interpreter.tape
-        self._current_cell_index = interpreter.tape_pointer
+        self._tape, self._current_cell_index = visual_info
 
     def display_changes(self):
         """Method called when changed to layout should be displayed."""
