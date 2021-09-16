@@ -82,7 +82,7 @@ class VisualiserController:
         self._commands_widget.display_paused()
 
         self.step()
-        self._visualiser_widget.display_visual()
+        self._visualiser_widget.update_visual()
         self._highlight_current_position()
 
     def _pressed_stop(self):
@@ -103,7 +103,7 @@ class VisualiserController:
         self._commands_widget.display_paused()
 
         self.back()
-        self._visualiser_widget.display_visual()
+        self._visualiser_widget.update_visual()
         self._highlight_current_position()
 
     def _pressed_forwards(self):
@@ -207,7 +207,7 @@ class VisualiserController:
                 break
         else:
             succesful = True
-        self._visualiser_widget.display_visual()
+        self._visualiser_widget.update_visual()
         self._highlight_current_position()
         return succesful
 
@@ -220,7 +220,7 @@ class VisualiserController:
                 break
         else:
             succesful = True
-        self._visualiser_widget.display_visual()
+        self._visualiser_widget.update_visual()
         self._highlight_current_position()
         return succesful
 
@@ -259,7 +259,6 @@ class VisualiserController:
         self._code_text.highlight_position(*self._current_command_position)
 
     def set_filetype(self, filetype):
-        print(f'set filetype: {filetype=}')
         visualiser_type = self._filetype_to_visualiser[filetype]
         if isinstance(self._visualiser_widget, visualiser_type):
             return

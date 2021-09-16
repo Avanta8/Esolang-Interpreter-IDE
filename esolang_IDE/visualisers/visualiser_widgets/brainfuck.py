@@ -26,7 +26,7 @@ class BrainfuckVisualiserWidget(BaseVisualiserWidget):
     def configure_visual(self, visual_info):
         self.table_model.set_tape(visual_info)
 
-    def display_visual(self):
+    def update_visual(self):
         self.table_model.display_changes()
         self.table.scrollTo(self.table_model.get_current_index())
 

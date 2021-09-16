@@ -22,7 +22,7 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
         # Should be overidden in a subclass
         pass
 
-    def display_visual(self):
+    def update_visual(self):
         """Method should be called when the changes to the visualiser want
         to be displayed."""
         # Should be overidden in a subclass
