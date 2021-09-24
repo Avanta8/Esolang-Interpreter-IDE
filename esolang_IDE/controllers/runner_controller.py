@@ -41,6 +41,7 @@ class RunnerController:
         self._runner_thread.paused.connect(self._runner_paused)
         self._runner_thread.stopped.connect(self._runner_stopped)
         self._runner_thread.continued.connect(self._runner_continued)
+        self._runner_thread.interrupted.connect(self._runner_interrupted)
         self._runner_thread.error.connect(self._runner_error)
 
         self._output_text.interrupt.connect(self.interrupt)
@@ -65,6 +66,10 @@ class RunnerController:
         self._code_runner.set_status_message(self._status.to_message())
         self._code_runner.clear_error_message()
         self._error_message = ''
+
+    def _runner_interrupted(self):
+        self._status = _RunnerStatus.stopped
+        self._output_text.stop_immediate()
 
     def _runner_error(self, error):
         if isinstance(error, interpreters.NoInputError):

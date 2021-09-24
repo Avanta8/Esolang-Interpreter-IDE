@@ -13,13 +13,15 @@ class RunnerThread(QtCore.QThread):
     paused = QtCore.pyqtSignal()
     stopped = QtCore.pyqtSignal()
     continued = QtCore.pyqtSignal()
+    interrupted = QtCore.pyqtSignal()
     error = QtCore.pyqtSignal(Exception)
 
     _want_to_start = QtCore.pyqtSignal()
 
     _NO_INTERRUPT = 0
     _RESTART_INTERRUPT = 1
-    _STOP_INTERRUPT = 2
+    _STOP_INTERRUPT = 2  # Stop interrupt is not currently used
+    _INTERRUPT_INTERRUPT = 3
 
     def __init__(self, code_func, input_func, output_func):
         super().__init__()
@@ -39,14 +41,23 @@ class RunnerThread(QtCore.QThread):
         try:
             while self._interpreter_running:
                 if self._run_call_interrupt:
-                    self.stop()
-                    if self._run_call_interrupt == self._RESTART_INTERRUPT:
-                        self._want_to_start.emit()
-                    self._run_call_interrupt = self._NO_INTERRUPT
+                    self._handle_interrupt()
                 else:
                     self._interpreter.step()
         except interpreters.InterpreterError as error:
             self.error.emit(error)
+
+    def _handle_interrupt(self):
+        self._interpreter_running = False
+        self._interpreter = None
+        if self._run_call_interrupt == self._STOP_INTERRUPT:
+            self.stopped.emit()
+        elif self._run_call_interrupt == self._RESTART_INTERRUPT:
+            self.stopped.emit()
+            self._want_to_start.emit()
+        elif self._run_call_interrupt == self._INTERRUPT_INTERRUPT:
+            self.interrupted.emit()
+        self._run_call_interrupt = self._NO_INTERRUPT
 
     def stop(self):
         self._interpreter_running = False
@@ -63,18 +74,15 @@ class RunnerThread(QtCore.QThread):
         if there is no current interpreter, create a new interpreter."""
         if self.isRunning():
             self._run_call_interrupt = self._RESTART_INTERRUPT
+        elif self._interpreter is None:
+            self._start_interpreter()
         else:
-            if self._interpreter is None:
-                self._start_interpreter()
-            else:
-                self.start()
-                self.continued.emit()
+            self.start()
+            self.continued.emit()
 
     def interrupt(self):
         if self.isRunning():
-            self._run_call_interrupt = self._STOP_INTERRUPT
-        else:
-            self.stop()
+            self._run_call_interrupt = self._INTERRUPT_INTERRUPT
 
     def _start_interpreter(self):
         if self.interpreter_type is None:
@@ -95,11 +103,10 @@ class RunnerThread(QtCore.QThread):
         if interpreter_type is self.interpreter_type:
             return
         self.interpreter_type = interpreter_type
-        self.stop()
+        self.interrupt()
 
 
 class CodeRunner(QtWidgets.QWidget):
-
     def __init__(self, parent=None, flags=QtCore.Qt.WindowFlags()):
         super().__init__(parent=parent, flags=flags)
 

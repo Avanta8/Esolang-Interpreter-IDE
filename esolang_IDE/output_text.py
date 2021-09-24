@@ -12,6 +12,7 @@ class OutputText(QtWidgets.QPlainTextEdit):
         self.setFont(font)
         self.setReadOnly(True)
         self.setMaximumBlockCount(1000)
+        # self.setMaximumBlockCount(100)
         self.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
 
     def add_text(self, text):
@@ -40,8 +41,6 @@ class RunnerOutputText(OutputText):
         self._buffer = collections.deque()
 
         self._stopped = False
-
-        self.interrupt.connect(self._timer.stop)
 
     def keyPressEvent(self, event):
 
@@ -74,6 +73,10 @@ class RunnerOutputText(OutputText):
 
     def stop(self):
         self._stopped = True
+
+    def stop_immediate(self):
+        self._stopped = True
+        self._buffer.clear()
 
     def continue_(self):
         self._stopped = False
