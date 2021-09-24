@@ -92,7 +92,8 @@ class RunnerController:
         if self._error_message:
             self._code_runner.set_error_message(self._error_message)
         self._code_runner.set_status_message(self._status.to_message())
-        self._input_text.restart()
+        if self._status is _RunnerStatus.stopped:
+            self._input_text.restart()
 
     def run_code(self):
         self._runner_thread.run_called()
