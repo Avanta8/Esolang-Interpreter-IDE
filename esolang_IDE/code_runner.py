@@ -2,7 +2,6 @@ from typing import Type
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from esolang_IDE.constants import FileTypes
 from esolang_IDE.input_text import StandardInputText, HighlightInputText
 from esolang_IDE.output_text import RunnerOutputText
 import esolang_IDE.interpreters as interpreters
@@ -100,10 +99,6 @@ class RunnerThread(QtCore.QThread):
 
 
 class CodeRunner(QtWidgets.QWidget):
-    INTERPRETER_TYPES = {
-        FileTypes.NONE: None,
-        FileTypes.BRAINFUCK: interpreters.FastBrainfuckInterpreter,
-    }
 
     def __init__(self, parent=None, flags=QtCore.Qt.WindowFlags()):
         super().__init__(parent=parent, flags=flags)
