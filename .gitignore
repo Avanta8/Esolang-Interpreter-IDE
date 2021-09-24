@@ -131,4 +131,4 @@ dmypy.json
 # Visual Studio Code
 .vscode
 
-*.b
+/*.b
