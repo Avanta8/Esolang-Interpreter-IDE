@@ -1,6 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-# from controllers.visualiser_controller import VisualiserController
 from code_text import CodeText
 from code_runner import CodeRunner
 from visualisers import MainVisualiser

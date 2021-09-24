@@ -1,14 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 
 from code_text import CodeText
-
-from visualisers import (
-    MainVisualiser,
-    IOWidget,
-    CommandsWidget,
-    NoVisualiserWidget,
-    BrainfuckVisualiserWidget,
-)
+from visualisers import MainVisualiser
 
 import interpreters
 
@@ -16,17 +9,6 @@ from constants import FileTypes
 
 
 class VisualiserController:
-
-    _filetype_to_visualiser = {
-        FileTypes.NONE: NoVisualiserWidget,
-        FileTypes.BRAINFUCK: BrainfuckVisualiserWidget,
-    }
-
-    _filetype_to_interpreter = {
-        FileTypes.NONE: interpreters.BaseInterpreter,
-        FileTypes.BRAINFUCK: interpreters.BrainfuckInterpreter,
-    }
-
     def __init__(self, code_text: CodeText, visualiser: MainVisualiser):
 
         # TODO:
@@ -253,16 +235,15 @@ class VisualiserController:
         """Highlight the current position in the code text."""
         self._code_text.highlight_position(*self._current_command_position)
 
-    def set_filetype(self, filetype):
-        interpreter_type = self._filetype_to_interpreter[filetype]
+    def set_filetype(self, filetype: FileTypes):
+        interpreter_type = filetype.to_interpreter()
         if isinstance(self._interpreter, interpreter_type):
             return
 
-        self._interpreter_type = self._filetype_to_interpreter[filetype]
+        self._interpreter_type = filetype.to_interpreter()
 
-        self._visualiser.set_visualiser_type(self._filetype_to_visualiser[filetype])
-
-        self._input_text.set_filetype(filetype)
+        self._visualiser.set_visualiser_type(filetype.to_visualiser())
+        self._input_text.set_decoder(filetype.to_input_decoder())
 
     def _key_during_visualisation(self):
         self._io_widget.timed_error_text('Please stop visualiser before editing text')

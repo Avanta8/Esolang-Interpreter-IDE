@@ -1,52 +1,15 @@
-import codecs
-import re
+from typing import Type
 from string import printable
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from constants import FileTypes
+import input_decoders
 
 
-ASCII_PRINTABLE = set(printable)
-
-
-class BaseDecoder:
-    @classmethod
-    def decode_next(cls, text):
-        return '', 0
-
-
-class BrainfuckDecoder(BaseDecoder):
-    REGEX = re.compile(r'\\(?:n|r|t|\\|\d{1,3})|[^\\]', flags=re.DOTALL)
-
-    @classmethod
-    def decode_next(cls, text):
-        match_obj = re.match(cls.REGEX, text)
-        if match_obj is None:
-            return None, 0
-
-        # Matched string
-        match = match_obj[0]
-
-        # A match of length 1 means that the match was just a standard chararacter.
-        # A match of more than length 1 means that the match was an escape sequence
-        if len(match) > 1:
-            if match[1].isdecimal():
-                # Ascii code
-                match = chr(int(match[1:]))
-            else:
-                # Escape character (\n, \r, \t)
-                match = codecs.decode(match, 'unicode_escape')
-        return match, match_obj.end()
+_ASCII_PRINTABLE = set(printable)
 
 
 class StandardInputText(QtWidgets.QPlainTextEdit):
-
-    DECODERS = {
-        FileTypes.NONE: BaseDecoder,
-        FileTypes.BRAINFUCK: BrainfuckDecoder,
-    }
-
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -78,8 +41,8 @@ class StandardInputText(QtWidgets.QPlainTextEdit):
     def prev(self):
         self.prev_input_indexes.pop()
 
-    def set_filetype(self, filetype):
-        self.decoder = self.DECODERS[filetype]
+    def set_decoder(self, decoder: Type[input_decoders.BaseDecoder]):
+        self.decoder = decoder
 
     def canInsertFromMimeData(self, source):
         return source.hasText() and self._can_add_text()
@@ -99,7 +62,7 @@ class StandardInputText(QtWidgets.QPlainTextEdit):
         text = event.text()
         textcursor = self.textCursor()
 
-        if text in ASCII_PRINTABLE:
+        if text in _ASCII_PRINTABLE:
             if self._can_add_text():
                 textcursor.insertText(text, self.default_char_format)
                 self.ensureCursorVisible()

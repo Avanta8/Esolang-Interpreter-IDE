@@ -3,8 +3,6 @@ import enum
 from code_runner import CodeRunner, RunnerThread
 from code_text import CodeText
 from constants import FileTypes
-from input_text import StandardInputText
-from output_text import RunnerOutputText
 import interpreters
 
 
@@ -22,11 +20,6 @@ class _RunnerStatus(enum.Enum):
 
 
 class RunnerController:
-
-    _filetype_to_interpreter = {
-        FileTypes.NONE: interpreters.BaseInterpreter,
-        FileTypes.BRAINFUCK: interpreters.FastBrainfuckInterpreter,
-    }
 
     def __init__(self, code_text: CodeText, code_runner: CodeRunner):
 
@@ -104,9 +97,9 @@ class RunnerController:
     def run_code(self):
         self._runner_thread.run_called()
 
-    def set_filetype(self, filetype):
-        self._runner_thread.set_interpreter_type(self._filetype_to_interpreter[filetype])
-        self._input_text.set_filetype(filetype)
+    def set_filetype(self, filetype: FileTypes):
+        self._runner_thread.set_interpreter_type(filetype.to_runner_interpreter())
+        self._input_text.set_decoder(filetype.to_input_decoder())
 
     def interrupt(self):
         self._runner_thread.interrupt()

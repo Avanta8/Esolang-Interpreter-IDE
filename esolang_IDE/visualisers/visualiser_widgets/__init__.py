@@ -1,2 +1,2 @@
-from .base_visualiser_widget import NoVisualiserWidget
+from .base_visualiser_widget import BaseVisualiserWidget, NoVisualiserWidget
 from .brainfuck import BrainfuckVisualiserWidget

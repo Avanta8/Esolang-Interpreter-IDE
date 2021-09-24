@@ -1,4 +1,4 @@
-import collections
+from typing import Type
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -92,7 +92,7 @@ class RunnerThread(QtCore.QThread):
         else:
             self.start()
 
-    def set_interpreter_type(self, interpreter_type):
+    def set_interpreter_type(self, interpreter_type: Type[interpreters.BaseInterpreter]):
         if interpreter_type is self.interpreter_type:
             return
         self.interpreter_type = interpreter_type
