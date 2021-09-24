@@ -1,4 +1,4 @@
-from PyQt5 import Qsci, QtCore, QtGui
+from PyQt5 import Qsci, QtGui
 
 
 class _LanguageLexer(Qsci.QsciLexerCustom):

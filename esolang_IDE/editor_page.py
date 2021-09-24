@@ -1,8 +1,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from code_text import CodeText
-from code_runner import CodeRunner
-from visualisers import MainVisualiser
+from esolang_IDE.code_text import CodeText
+from esolang_IDE.code_runner import CodeRunner
+from esolang_IDE.visualisers import MainVisualiser
 
 
 class CloseSignalDockWidget(QtWidgets.QDockWidget):

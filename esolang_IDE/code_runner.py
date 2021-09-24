@@ -2,10 +2,10 @@ from typing import Type
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from constants import FileTypes
-from input_text import StandardInputText, HighlighInputText
-from output_text import RunnerOutputText
-import interpreters
+from esolang_IDE.constants import FileTypes
+from esolang_IDE.input_text import StandardInputText, HighlightInputText
+from esolang_IDE.output_text import RunnerOutputText
+import esolang_IDE.interpreters as interpreters
 
 
 class RunnerThread(QtCore.QThread):

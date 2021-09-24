@@ -4,9 +4,9 @@ from PyQt5 import QtCore, QtWidgets
 
 from .page_controller import PageController
 
-from editor_page import EditorPage
-from notebook import Notebook
-from file_info import FileInfo
+from esolang_IDE.editor_page import EditorPage
+from esolang_IDE.notebook import Notebook
+from esolang_IDE.file_info import FileInfo
 
 
 class _PageInfo(NamedTuple):

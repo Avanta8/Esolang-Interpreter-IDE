@@ -1,9 +1,9 @@
 import enum
 
-from code_runner import CodeRunner, RunnerThread
-from code_text import CodeText
-from constants import FileTypes
-import interpreters
+from esolang_IDE.code_runner import CodeRunner, RunnerThread
+from esolang_IDE.code_text import CodeText
+from esolang_IDE.constants import FileTypes
+import esolang_IDE.interpreters as interpreters
 
 
 class _RunnerStatus(enum.Enum):

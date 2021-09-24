@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from controllers import IOController
+from esolang_IDE.controllers import IOController
 
 # Look at: https://doc.qt.io/qtforpython/overviews/model-view-programming.html#using-views-with-an-existing-model
 # for file system view
@@ -72,6 +72,5 @@ class IDE(QtWidgets.QMainWindow):
                 menu.addAction(action)
 
         self.statusBar()
-
 
         self.setCentralWidget(self.controller.get_main_widget())

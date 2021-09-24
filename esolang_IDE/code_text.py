@@ -1,16 +1,16 @@
 from PyQt5 import QtWidgets, QtGui, QtCore, Qsci
 
-from constants import FileTypes
-import lexers
+from esolang_IDE.constants import FileTypes
+import esolang_IDE.lexers
 
 
 class CodeText(Qsci.QsciScintilla):
 
     _LEXERS = {
-        FileTypes.NONE: lexers.NoneLexer,
-        FileTypes.TEXT: lexers.NoneLexer,
-        FileTypes.BRAINFUCK: lexers.BrainfuckLexer,
-        FileTypes.PYTHON: lexers.NoneLexer,
+        FileTypes.NONE: esolang_IDE.lexers.NoneLexer,
+        FileTypes.TEXT: esolang_IDE.lexers.NoneLexer,
+        FileTypes.BRAINFUCK: esolang_IDE.lexers.BrainfuckLexer,
+        FileTypes.PYTHON: esolang_IDE.lexers.NoneLexer,
     }
 
     # According to docs, The 0-7 are normally used by lexers

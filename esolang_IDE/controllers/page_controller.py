@@ -2,9 +2,9 @@ from PyQt5 import QtCore
 from .visualiser_controller import VisualiserController
 from .runner_controller import RunnerController
 
-from editor_page import EditorPage
-from code_text import CodeText
-from code_runner import CodeRunner
+from esolang_IDE.editor_page import EditorPage
+from esolang_IDE.code_text import CodeText
+from esolang_IDE.code_runner import CodeRunner
 
 
 class PageController(QtCore.QObject):

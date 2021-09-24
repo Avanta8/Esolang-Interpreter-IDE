@@ -1,11 +1,11 @@
 from PyQt5 import QtWidgets
 
-import main_window
+from esolang_IDE.main_window import IDE
 
 
 def main():
     app = QtWidgets.QApplication([])
-    _ = main_window.IDE()
+    _ = IDE()
     app.exec_()
 
 

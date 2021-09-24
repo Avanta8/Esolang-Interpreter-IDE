@@ -1,8 +1,8 @@
 import enum
 
-import visualisers
-import interpreters
-import input_decoders
+import esolang_IDE.visualisers as visualisers
+import esolang_IDE.interpreters as interpreters
+import esolang_IDE.input_decoders as input_decoders
 
 
 class FileTypes(enum.Enum):

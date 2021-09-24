@@ -1,2 +1,1 @@
-from .visualiser_controller import VisualiserController
 from .io_controller import IOController

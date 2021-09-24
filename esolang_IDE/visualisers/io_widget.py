@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 
-from input_text import HighlighInputText
-from output_text import OutputText
+from esolang_IDE.input_text import HighlightInputText
+from esolang_IDE.output_text import OutputText
 
 
 class IOWidget(QtWidgets.QWidget):
@@ -18,7 +18,7 @@ class IOWidget(QtWidgets.QWidget):
         self._error_text_timer.setSingleShot(True)
         self._error_text_timer.timeout.connect(self.clear_error_text)
 
-        self._input_text = HighlighInputText(self)
+        self._input_text = HighlightInputText(self)
         self._output_text = OutputText(self)
         self._error_text = QtWidgets.QLineEdit(self)
 

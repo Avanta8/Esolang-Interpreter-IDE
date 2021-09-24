@@ -1,11 +1,11 @@
 from PyQt5 import QtCore, QtWidgets
 
-from code_text import CodeText
-from visualisers import MainVisualiser
+from esolang_IDE.code_text import CodeText
+from esolang_IDE.visualisers import MainVisualiser
 
-import interpreters
+import esolang_IDE.interpreters as interpreters
 
-from constants import FileTypes
+from esolang_IDE.constants import FileTypes
 
 
 class VisualiserController:

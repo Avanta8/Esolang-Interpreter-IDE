@@ -3,7 +3,7 @@ from string import printable
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import input_decoders
+from esolang_IDE.input_decoders import BaseDecoder
 
 
 _ASCII_PRINTABLE = set(printable)
@@ -41,7 +41,7 @@ class StandardInputText(QtWidgets.QPlainTextEdit):
     def prev(self):
         self.prev_input_indexes.pop()
 
-    def set_decoder(self, decoder: Type[input_decoders.BaseDecoder]):
+    def set_decoder(self, decoder: Type[BaseDecoder]):
         self.decoder = decoder
 
     def canInsertFromMimeData(self, source):
@@ -80,7 +80,7 @@ class StandardInputText(QtWidgets.QPlainTextEdit):
             super().keyPressEvent(event)
 
 
-class HighlighInputText(StandardInputText):
+class HighlightInputText(StandardInputText):
     def __init__(self, parent=None):
         super().__init__(parent)
 
