@@ -1,17 +1,7 @@
 from PyQt5 import QtWidgets, QtGui, QtCore, Qsci
 
-from esolang_IDE.constants import FileTypes
-import esolang_IDE.lexers
-
 
 class CodeText(Qsci.QsciScintilla):
-
-    _LEXERS = {
-        FileTypes.NONE: esolang_IDE.lexers.NoneLexer,
-        FileTypes.TEXT: esolang_IDE.lexers.NoneLexer,
-        FileTypes.BRAINFUCK: esolang_IDE.lexers.BrainfuckLexer,
-        FileTypes.PYTHON: esolang_IDE.lexers.NoneLexer,
-    }
 
     # According to docs, The 0-7 are normally used by lexers
     _CURRENT_POSITION_INDICATOR = 8
@@ -67,8 +57,8 @@ class CodeText(Qsci.QsciScintilla):
         self.setIndicatorForegroundColor(QtGui.QColor('red'), indicatorNumber=self._ERROR_INDICATOR)
         self.setIndicatorOutlineColor(QtGui.QColor('red'), indicatorNumber=self._ERROR_INDICATOR)
 
-    def set_filetype(self, filetype):
-        self.setLexer(self._LEXERS[filetype](self))
+    def set_lexer(self, lexer):
+        self.setLexer(lexer(self))
 
     def highlight_position(self, position, chars):
         self.SendScintilla(self.SCI_SETINDICATORCURRENT, self._CURRENT_POSITION_INDICATOR)

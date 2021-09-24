@@ -1,7 +1,7 @@
 from PyQt5 import Qsci, QtGui
 
 
-class _LanguageLexer(Qsci.QsciLexerCustom):
+class LanguageLexer(Qsci.QsciLexerCustom):
 
     # _default_font = QtGui.QFont('Source Code Pro', 10)
     # _default_font = QtGui.QFont('Fira Code', 10)
@@ -41,7 +41,7 @@ class _LanguageLexer(Qsci.QsciLexerCustom):
         raise NotImplementedError
 
 
-class NoneLexer(_LanguageLexer):
+class NoneLexer(LanguageLexer):
 
     _styles = [
         (
@@ -54,7 +54,7 @@ class NoneLexer(_LanguageLexer):
         pass
 
 
-class BrainfuckLexer(_LanguageLexer):
+class BrainfuckLexer(LanguageLexer):
 
     _styles = [
         (

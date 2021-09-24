@@ -3,6 +3,7 @@ import enum
 import esolang_IDE.visualisers as visualisers
 import esolang_IDE.interpreters as interpreters
 import esolang_IDE.input_decoders as input_decoders
+import esolang_IDE.lexers as lexers
 
 
 class FileTypes(enum.Enum):
@@ -34,6 +35,12 @@ class FileTypes(enum.Enum):
             FileTypes.NONE: input_decoders.BaseDecoder,
             FileTypes.BRAINFUCK: input_decoders.BrainfuckDecoder,
         }.get(self, input_decoders.BaseDecoder)
+
+    def to_lexer(self) -> lexers.LanguageLexer:
+        return {
+            FileTypes.NONE: lexers.NoneLexer,
+            FileTypes.BRAINFUCK: lexers.BrainfuckLexer,
+        }.get(self, lexers.NoneLexer)
 
     @classmethod
     def from_extension(cls, extension):

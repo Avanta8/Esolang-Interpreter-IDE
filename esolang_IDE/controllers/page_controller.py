@@ -48,7 +48,7 @@ class PageController(QtCore.QObject):
         self._runner_controller.interrupt()
 
     def set_filetype(self, filetype):
-        self._code_text.set_filetype(filetype)
+        self._code_text.set_lexer(filetype.to_lexer())
         self._runner_controller.set_filetype(filetype)
         self._visualiser_controller.set_filetype(filetype)
 
