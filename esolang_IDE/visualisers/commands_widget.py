@@ -114,3 +114,6 @@ class CommandsWidget(QtWidgets.QWidget):
             if button.isVisible():
                 self.button_layout.removeWidget(button)
                 button.hide()
+
+    def get_jump_input(self):
+        return self.jump_input

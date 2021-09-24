@@ -1,5 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 
+from code_text import CodeText
+
 from visualisers import (
     MainVisualiser,
     IOWidget,
@@ -25,28 +27,17 @@ class VisualiserController:
         FileTypes.BRAINFUCK: interpreters.BrainfuckInterpreter,
     }
 
-    def __init__(self, code_text):
+    def __init__(self, code_text: CodeText, visualiser: MainVisualiser):
 
-        self._io_widget = IOWidget()
-        self._commands_widget = CommandsWidget()
-        self._visualiser_widget = NoVisualiserWidget()
+        # TODO:
+        # Refactor setting the runspeed
 
         self._code_text = code_text
-
-        self._visualiser = MainVisualiser(
-            visualiser_widget=self._visualiser_widget,
-            commands_widget=self._commands_widget,
-            io_widget=self._io_widget,
-        )
+        self._visualiser = visualiser
 
         self._current_command_position = (0, 0)  # (start_position, num_chars)
 
         self._run_timer = QtCore.QTimer()
-
-        # Change this later
-        self._input_text = self._io_widget.input_text
-        self._output_text = self._io_widget.output_text
-        self._jump_input = self._commands_widget.jump_input
 
         self._interpreter = None
 
@@ -54,6 +45,10 @@ class VisualiserController:
         self._connect_signals()
 
     def _connect_signals(self):
+        # TODO:
+        # Instead of having to connect on all the buttons,
+        # the command widget should instead connect all of them to emitting
+        # a button press with one Enum argument detailing which button was pressed.
         self._commands_widget.run_button.clicked.connect(self._pressed_run)
         self._commands_widget.continue_button.clicked.connect(self._pressed_run)
         self._commands_widget.step_button.clicked.connect(self._pressed_step)
@@ -259,23 +254,49 @@ class VisualiserController:
         self._code_text.highlight_position(*self._current_command_position)
 
     def set_filetype(self, filetype):
-        visualiser_type = self._filetype_to_visualiser[filetype]
-        if isinstance(self._visualiser_widget, visualiser_type):
+        interpreter_type = self._filetype_to_interpreter[filetype]
+        if isinstance(self._interpreter, interpreter_type):
             return
+
         self._interpreter_type = self._filetype_to_interpreter[filetype]
 
-        self._visualiser_widget.deleteLater()
-        self._visualiser_widget = visualiser_type()
-
-        self._visualiser.insert_visualiser_widget(self._visualiser_widget)
+        self._visualiser.set_visualiser_type(self._filetype_to_visualiser[filetype])
 
         self._input_text.set_filetype(filetype)
 
     def _key_during_visualisation(self):
         self._io_widget.timed_error_text('Please stop visualiser before editing text')
 
+    def closed(self):
+        """Should be called if the visualer window is closed."""
+        self._pressed_stop()
+
     def get_visualiser(self):
         return self._visualiser
 
     def set_command_position(self, position):
         self._current_command_position = position
+
+    @property
+    def _visualiser_widget(self):
+        return self._visualiser.get_visualiser_widget()
+
+    @property
+    def _io_widget(self):
+        return self._visualiser.get_io_widget()
+
+    @property
+    def _commands_widget(self):
+        return self._visualiser.get_commands_widget()
+
+    @property
+    def _input_text(self):
+        return self._io_widget.get_input_text()
+
+    @property
+    def _output_text(self):
+        return self._io_widget.get_output_text()
+
+    @property
+    def _jump_input(self):
+        return self._commands_widget.get_jump_input()

@@ -14,20 +14,26 @@ class RunnerThread(QtCore.QThread):
     paused = QtCore.pyqtSignal()
     stopped = QtCore.pyqtSignal()
     continued = QtCore.pyqtSignal()
-    error = QtCore.pyqtSignal(str)
+    error = QtCore.pyqtSignal(Exception)
+
+    _want_to_start = QtCore.pyqtSignal()
 
     _NO_INTERRUPT = 0
     _RESTART_INTERRUPT = 1
     _STOP_INTERRUPT = 2
 
-    def __init__(self, parent):
-        super().__init__(parent)
+    def __init__(self, code_func, input_func, output_func):
+        super().__init__()
 
-        self.view = parent
+        self._code_func = code_func
+        self._input_func = input_func
+        self._output_func = output_func
 
         self.interpreter_type = None
         self._interpreter = None
         self._run_call_interrupt = False
+
+        self._want_to_start.connect(self.run_called)
 
     def run(self):
         self._interpreter_running = True
@@ -36,13 +42,12 @@ class RunnerThread(QtCore.QThread):
                 if self._run_call_interrupt:
                     self.stop()
                     if self._run_call_interrupt == self._RESTART_INTERRUPT:
-                        self._start_interpreter()
-                        self._interpreter_running = True
+                        self._want_to_start.emit()
                     self._run_call_interrupt = self._NO_INTERRUPT
                 else:
                     self._interpreter.step()
         except interpreters.InterpreterError as error:
-            self.handle_error(error)
+            self.error.emit(error)
 
     def stop(self):
         self._interpreter_running = False
@@ -63,8 +68,8 @@ class RunnerThread(QtCore.QThread):
             if self._interpreter is None:
                 self._start_interpreter()
             else:
-                self.continued.emit()
                 self.start()
+                self.continued.emit()
 
     def interrupt(self):
         if self.isRunning():
@@ -78,39 +83,14 @@ class RunnerThread(QtCore.QThread):
         self.started.emit()
         try:
             self._interpreter = self.interpreter_type(
-                self.view.get_code_text(),
-                input_func=self.view.get_next_input,
-                output_func=self.view.buffer_output,
+                self._code_func(),
+                input_func=self._input_func,
+                output_func=self._output_func,
             )
         except interpreters.ProgramSyntaxError as error:
-            self.handle_error(error)
+            self.error.emit(error)
         else:
             self.start()
-
-    def handle_error(self, error):
-        message = ''
-        if isinstance(error, interpreters.NoInputError):
-            message = 'Enter Input'
-            self.pause()
-        elif isinstance(error, interpreters.ExecutionEndedError):
-            self.stop()
-        elif isinstance(error, interpreters.ProgramError):
-            error_type = error.error
-            if error_type is interpreters.ErrorTypes.UNMATCHED_OPEN_PAREN:
-                message = 'Unmatched opening parentheses'
-            elif error_type is interpreters.ErrorTypes.UNMATCHED_CLOSE_PAREN:
-                message = 'Unmatched closing parentheses'
-            elif error_type is interpreters.ErrorTypes.INVALID_TAPE_CELL:
-                message = 'Tape pointer out of bounds'
-            if error.location:
-                message += f' at location {error.location}'
-            self.stop()
-        else:
-            message = 'An unknown error occurred.'
-            self.stop()
-
-        if message:
-            self.error.emit(message)
 
     def set_interpreter_type(self, interpreter_type):
         if interpreter_type is self.interpreter_type:
@@ -128,106 +108,40 @@ class CodeRunner(QtWidgets.QWidget):
     def __init__(self, parent=None, flags=QtCore.Qt.WindowFlags()):
         super().__init__(parent=parent, flags=flags)
 
-        self.editor_page = parent
-
-        self._output_buffer = collections.deque()
-
         self.init_widgets()
 
     def init_widgets(self):
 
-        self.runner = RunnerThread(self)
-        self.runner.started.connect(self.runner_started)
-        self.runner.paused.connect(self.runner_paused)
-        self.runner.stopped.connect(self.runner_stopped)
-        self.runner.continued.connect(self.runner_continued)
-        self.runner.error.connect(self.runner_error)
-
-        self.input_text = StandardInputText(self)
-        # self.input_text = HighlighInputText(self)
-
-        self.output_text = RunnerOutputText(self)
-        self.output_text.interrupt.connect(self.runner.interrupt)
+        self._input_text = StandardInputText()
+        self._output_text = RunnerOutputText()
 
         splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
-        splitter.addWidget(self.output_text)
-        splitter.addWidget(self.input_text)
+        splitter.addWidget(self._output_text)
+        splitter.addWidget(self._input_text)
 
-        self.error_text = QtWidgets.QLineEdit(self)
-        self.error_text.setReadOnly(True)
+        self._error_text = QtWidgets.QLineEdit(self)
+        self._error_text.setReadOnly(True)
 
-        self.statusbar = QtWidgets.QStatusBar(self)
+        self._statusbar = QtWidgets.QStatusBar(self)
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(splitter, stretch=1)
-        layout.addWidget(self.error_text)
-        layout.addWidget(self.statusbar)
+        layout.addWidget(self._error_text)
+        layout.addWidget(self._statusbar)
         self.setLayout(layout)
 
-        self.buffer_timer = QtCore.QTimer(self)
-        self.buffer_timer.timeout.connect(self.add_from_buffer)
-        self.buffer_timer.setInterval(10)
+    def set_error_message(self, message):
+        self._error_text.setText(message)
+        self._error_text.show()
 
-    def set_filetype(self, filetype):
-        self.input_text.set_filetype(filetype)
-        self.runner.set_interpreter_type(self.INTERPRETER_TYPES[filetype])
+    def clear_error_message(self):
+        self._error_text.hide()
 
-    def run_code(self):
-        self.runner.run_called()
+    def set_status_message(self, text):
+        self._statusbar.showMessage(text)
 
-    def runner_started(self):
-        """Method should be called from `RunnerThread` whenever it is started."""
-        self.finished = False
-        self.output_text.clear()
-        self._output_buffer.clear()
-        self.runner_continued()
+    def get_input_text(self):
+        return self._input_text
 
-    def runner_stopped(self):
-        """Method should be called from `RunnerThread` whenever it is stopped."""
-        self.running = False
-        self.finished = True
-        self.input_text.restart()
-        self.statusbar.showMessage('Stopped')
-        self.error_text.hide()
-
-    def runner_paused(self):
-        """Method should be called from `RunnerThread` whenever it is paused."""
-        self.running = False
-        self.statusbar.showMessage('Paused')
-        self.error_text.hide()
-
-    def runner_continued(self):
-        """Method should be called from `RunnerThread` whenever it is continued."""
-        self.running = True
-        self.buffer_timer.start()
-        self.statusbar.showMessage('Running')
-        self.error = ''
-        self.error_text.hide()
-
-    def runner_error(self, text):
-        self.error = text
-
-    def get_code_text(self):
-        return self.editor_page.get_text()
-
-    def get_next_input(self):
-        return self.input_text.next_()
-
-    def add_output(self, text):
-        self.output_text.add_text(text)
-
-    def buffer_output(self, text):
-        self._output_buffer.appendleft(text)
-
-    def add_from_buffer(self):
-        if self._output_buffer:
-            length = min(100, len(self._output_buffer))
-            text = ''.join(self._output_buffer.pop() for _ in range(length))
-            self.add_output(text)
-        else:
-            if not self.running:
-                self.buffer_timer.stop()
-                if self.error:
-                    self.error_text.setText(self.error)
-                    self.error_text.show()
-                    self.error = ''
+    def get_output_text(self):
+        return self._output_text

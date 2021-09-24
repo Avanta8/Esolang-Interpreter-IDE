@@ -1,8 +1,9 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from controllers.visualiser_controller import VisualiserController
+# from controllers.visualiser_controller import VisualiserController
 from code_text import CodeText
 from code_runner import CodeRunner
+from visualisers import MainVisualiser
 
 
 class CloseSignalDockWidget(QtWidgets.QDockWidget):
@@ -16,70 +17,51 @@ class CloseSignalDockWidget(QtWidgets.QDockWidget):
 
 class EditorPage(QtWidgets.QMainWindow):
 
-    text_changed = QtCore.pyqtSignal(QtWidgets.QWidget)
+    visualiser_closed = QtCore.pyqtSignal()
+    code_runner_closed = QtCore.pyqtSignal()
 
-    def __init__(self, filetype, text, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # TODO:
-        # Perhaps disable the visualiser and code runner fileinfo.filetype is None.
 
         self.init_widgets()
 
-        self.set_filetype(filetype)
-
-        if text:
-            self.code_text.setText(text)
-
     def init_widgets(self):
 
-        self.code_text = CodeText(self)
-        self.visualiser_controller = VisualiserController(self.code_text)
+        self._code_text = CodeText()
+        self._code_runner = CodeRunner()
+        self._visualiser = MainVisualiser()
 
-        self.visualiser = self.visualiser_controller.get_visualiser()
-        self.code_runner = CodeRunner(self)
+        self._code_runner_dock_widget = CloseSignalDockWidget('Code Runner')
+        self._code_runner_dock_widget.setWidget(self._code_runner)
 
-        self.code_text.textChanged.connect(self._code_text_changed)
+        self._visualiser_dock_widget = CloseSignalDockWidget('Visualiser')
+        self._visualiser_dock_widget.setWidget(self._visualiser)
 
-        self.code_runner_dock_widget = CloseSignalDockWidget('Code Runner')
-        self.code_runner_dock_widget.setWidget(self.code_runner)
+        self._visualiser_dock_widget.close_signal.connect(self.visualiser_closed.emit)
+        self._code_runner_dock_widget.close_signal.connect(self.code_runner_closed.emit)
 
-        self.visualiser_dock_widget = CloseSignalDockWidget('Visualiser')
-        self.visualiser_dock_widget.setWidget(self.visualiser)
-
-        self.visualiser_dock_widget.close_signal.connect(self.visualiser.closed)
-
-        self.setCentralWidget(self.code_text)
-
-        self._text_has_changed = False
-
-    def set_filetype(self, filetype):
-        self._filetype = filetype
-
-        self.code_text.set_filetype(filetype)
-        # self.visualiser.set_filetype(filetype)
-        self.code_runner.set_filetype(filetype)
-
-        self.visualiser_controller.set_filetype(filetype)
-
-    def get_text(self):
-        return self.code_text.text()
+        self.setCentralWidget(self._code_text)
 
     def open_visualiser(self):
         """Dock the `visualiser_dock_widget` if it is not already visible"""
-        if not self.visualiser.isVisible():
-            self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.visualiser_dock_widget)
-            self.visualiser_dock_widget.show()
+        if not self._visualiser.isVisible():
+            self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self._visualiser_dock_widget)
+            self._visualiser_dock_widget.show()
 
     def open_code_runner(self):
         """Dock the `code_runner_dock_widget` if it is not already visible"""
-        if not self.code_runner.isVisible():
+        if not self._code_runner.isVisible():
             self.addDockWidget(
-                QtCore.Qt.BottomDockWidgetArea, self.code_runner_dock_widget
+                QtCore.Qt.BottomDockWidgetArea, self._code_runner_dock_widget
             )
-            self.code_runner_dock_widget.show()
-        self.code_runner.run_code()
+            self._code_runner_dock_widget.show()
+        # self.code_runner.run_code()
 
-    @QtCore.pyqtSlot()
-    def _code_text_changed(self):
-        self.text_changed.emit(self)
+    def get_code_text(self):
+        return self._code_text
+
+    def get_code_runner(self):
+        return self._code_runner
+
+    def get_visualiser(self):
+        return self._visualiser
