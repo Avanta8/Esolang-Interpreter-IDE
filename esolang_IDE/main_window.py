@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable
 from PyQt5 import QtWidgets
 
 # Look at: https://doc.qt.io/qtforpython/overviews/model-view-programming.html#using-views-with-an-existing-model
@@ -6,7 +6,7 @@ from PyQt5 import QtWidgets
 
 
 class IDE(QtWidgets.QMainWindow):
-    def __init__(self, *args, menu_layout: Optional[dict[str, tuple[tuple]]] = None, **kwargs):
+    def __init__(self, *args, menu_layout: Optional[dict[str, tuple]] = None, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.statusBar()
@@ -14,7 +14,9 @@ class IDE(QtWidgets.QMainWindow):
         if menu_layout:
             self.init_menubar(menu_layout)
 
-    def init_menubar(self, menus: dict[str, tuple[tuple]]):
+    def init_menubar(
+        self, menus: dict[str, tuple[tuple[str, str, str, Callable[[], None]]]]
+    ):
 
         menubar = self.menuBar()
         for name, actions in menus.items():
