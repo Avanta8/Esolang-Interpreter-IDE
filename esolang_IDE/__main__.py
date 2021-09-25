@@ -1,11 +1,12 @@
 from PyQt5 import QtWidgets
 
-from esolang_IDE.main_window import IDE
+from controllers import IOController
 
 
 def main():
     app = QtWidgets.QApplication([])
-    _ = IDE()
+    m = IOController()
+    m.ide.show()
     app.exec_()
 
 

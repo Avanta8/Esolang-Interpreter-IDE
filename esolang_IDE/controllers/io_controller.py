@@ -1,4 +1,4 @@
-from typing import Dict, NamedTuple
+from typing import NamedTuple
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -7,6 +7,7 @@ from .page_controller import PageController
 from esolang_IDE.editor_page import EditorPage
 from esolang_IDE.notebook import Notebook
 from esolang_IDE.file_info import FileInfo
+from esolang_IDE.main_window import IDE
 
 
 class _PageInfo(NamedTuple):
@@ -15,15 +16,39 @@ class _PageInfo(NamedTuple):
 
 
 class IOController:
-    def __init__(self, ide):
-        self.ide = ide
+    def __init__(self):
 
-        self.notebook = Notebook(self.ide)
+        self.notebook = Notebook()
         self.notebook.page_closed.connect(self._page_closed)
 
-        self.pages: Dict[EditorPage, _PageInfo] = {}
+        self.pages: dict[EditorPage, _PageInfo] = {}
 
         self._file_dialog_filter = 'All Files (*);;Text Files (*.txt);;Brainfuck (*.b)'
+
+        self.init_mainwindow()
+
+    def init_mainwindow(self):
+        self.ide = IDE(
+            menu_layout={
+                'File': (
+                    ('New', 'Ctrl+N', 'New file', self.file_new),
+                    ('Open', 'Ctrl+O', 'Open file', self.file_open),
+                    ('Save', 'Ctrl+S', 'Save file', self.file_save),
+                    ('Save As', 'Ctrl+Shift+S', 'Save as', self.file_saveas),
+                ),
+                'Run': (
+                    ('Run code', 'Ctrl+B', 'Run code', self.run_code),
+                    (
+                        'Open visualiser',
+                        'Ctrl+Shift+B',
+                        'Visualise execution',
+                        self.open_visualier,
+                    ),
+                ),
+            }
+        )
+        self.ide.setGeometry(300, 200, 1280, 720)
+        self.ide.setCentralWidget(self.notebook)
 
     def file_new(self):
         self.create_new_page(FileInfo.from_empty())
@@ -91,10 +116,6 @@ class IOController:
 
         self.pages[page] = _PageInfo(page_controller, fileinfo)
 
-    def get_main_widget(self):
-        """Return the widget that should be set as the central widget of the main window."""
-        return self.notebook
-
     def _page_closed(self, page):
         # Clean up reference
         self.pages.pop(page)
@@ -108,5 +129,5 @@ class IOController:
     def _update_pagename(self, page):
         fileinfo = self.pages[page].fileinfo
         self.notebook.set_page_tab_text(
-            page, f'{"*. " if fileinfo.changed else ""}{fileinfo.filename}'
+            page, f'{"*. " if fileinfo.changed else ""}{fileinfo.filename or "Untitled"}'
         )
