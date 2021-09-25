@@ -41,10 +41,24 @@ class EditorPage(QtWidgets.QMainWindow):
 
         self.setCentralWidget(self._code_text)
 
+        # Hack to change the default size of the dock widgets.
+        # Initially makes them as small as possible.
+        self.open_visualiser()
+        self.open_code_runner()
+        self.resizeDocks(
+            [self._visualiser_dock_widget, self._code_runner_dock_widget],
+            [1, 1],
+            QtCore.Qt.Vertical,
+        )
+        self.removeDockWidget(self._visualiser_dock_widget)
+        self.removeDockWidget(self._code_runner_dock_widget)
+
     def open_visualiser(self):
         """Dock the `visualiser_dock_widget` if it is not already visible"""
         if not self._visualiser.isVisible():
             self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self._visualiser_dock_widget)
+            # self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self._visualiser_dock_widget)
+            # self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self._visualiser_dock_widget, QtCore.Qt.Vertical)
             self._visualiser_dock_widget.show()
 
     def open_code_runner(self):
@@ -54,7 +68,6 @@ class EditorPage(QtWidgets.QMainWindow):
                 QtCore.Qt.BottomDockWidgetArea, self._code_runner_dock_widget
             )
             self._code_runner_dock_widget.show()
-        # self.code_runner.run_code()
 
     def get_code_text(self):
         return self._code_text

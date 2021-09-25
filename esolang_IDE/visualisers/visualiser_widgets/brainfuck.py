@@ -11,7 +11,7 @@ class BrainfuckVisualiserWidget(BaseVisualiserWidget):
 
     def init_widgets(self):
 
-        self.table = BrainfuckTable(self, min_column_width=40, column_counts=(20, 10, 5))
+        self.table = BrainfuckTable(self, min_column_width=40, column_counts=(100, 50, 25, 10, 5))
         self.table_model = BrainfuckTableModel()
         self.table.setModel(self.table_model)
         self.table.size_changed.connect(self.table_model.set_columns)
@@ -105,7 +105,7 @@ class BrainfuckTableModel(QtCore.QAbstractTableModel):
         """"""
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
-                return section
+                return section + 1
             else:
                 return section * self._columns
         return QtCore.QVariant()

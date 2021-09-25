@@ -184,7 +184,7 @@ class IOController:
                 ),
             }
         )
-        self.ide.setGeometry(300, 200, 1280, 720)
+        self.ide.setGeometry(200, 100, 1600, 900)
         self.ide.setCentralWidget(self.notebook)
 
     def _page_closed(self, page):
