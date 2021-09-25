@@ -7,5 +7,5 @@ setup(
     author_email='harryhmin@gmail.com',
     description='An IDE for esoteric languages',
     packages=find_packages(),
-    python_requires='>=3.7',
+    python_requires='>=3.9',
 )
