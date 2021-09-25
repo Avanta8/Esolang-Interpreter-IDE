@@ -51,7 +51,8 @@ class FileInfo:
 
     @classmethod
     def from_empty(cls):
-        return cls('', '', FileTypes.NONE)
+        # return cls('', '', FileTypes.NONE)
+        return cls('', '', FileTypes.BRAINFUCK)
 
     @staticmethod
     def parse_filepath(filepath):
