@@ -42,6 +42,9 @@ class CodeText(Qsci.QsciScintilla):
         self.setMarginWidth(0, 40)
         self.setMarginWidth(1, 0)
 
+        self.setScrollWidth(1)
+
+
     def configure_styles(self):
         self.setCaretLineBackgroundColor(QtGui.QColor(245, 245, 245))
         self.setIndentationGuidesBackgroundColor(QtGui.QColor(211, 211, 211))
