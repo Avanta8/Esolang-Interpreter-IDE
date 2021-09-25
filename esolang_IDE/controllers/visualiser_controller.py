@@ -7,6 +7,8 @@ import esolang_IDE.interpreters as interpreters
 
 from esolang_IDE.constants import FileTypes
 
+from esolang_IDE.visualisers.commands_widget import ButtonType
+
 
 class VisualiserController:
     def __init__(self, code_text: CodeText, visualiser: MainVisualiser):
@@ -27,35 +29,36 @@ class VisualiserController:
         self._connect_signals()
 
     def _connect_signals(self):
-        # TODO:
-        # Instead of having to connect on all the buttons,
-        # the command widget should instead connect all of them to emitting
-        # a button press with one Enum argument detailing which button was pressed.
-        self._commands_widget.run_button.clicked.connect(self._pressed_run)
-        self._commands_widget.continue_button.clicked.connect(self._pressed_run)
-        self._commands_widget.step_button.clicked.connect(self._pressed_step)
-        self._commands_widget.pause_button.clicked.connect(self._pressed_pause)
-        self._commands_widget.back_button.clicked.connect(self._pressed_back)
-        self._commands_widget.stop_button.clicked.connect(self._pressed_stop)
-        self._commands_widget.forwards_button.clicked.connect(self._pressed_forwards)
-        self._commands_widget.backwards_button.clicked.connect(self._pressed_backwards)
 
-        self._commands_widget.speed_slider.valueChanged.connect(self._set_runspeed)
-        self._commands_widget.speed_checkbox.stateChanged.connect(self._set_runspeed)
+        self._commands_widget.runspeed_changed.connect(self._set_runspeed)
+        self._commands_widget.button_clicked.connect(self._button_clicked)
 
         self._code_text.key_during_visualisation.connect(self._key_during_visualisation)
 
         self._run_timer.timeout.connect(self._run_signal)
 
-    def _pressed_run(self):
+    def _button_clicked(self, button_type: ButtonType):
         self._clear_errors()
+
+        # Run the method corresponding to which putton was pressed.
+        {
+            ButtonType.run: self._pressed_run,
+            ButtonType.continue_: self._pressed_run,
+            ButtonType.step: self._pressed_step,
+            ButtonType.pause: self._pressed_pause,
+            ButtonType.stop: self._pressed_stop,
+            ButtonType.back: self._pressed_back,
+            ButtonType.jump_forwards: self._pressed_forwards,
+            ButtonType.jump_backwards: self._pressed_backwards,
+        }[button_type]()
+
+    def _pressed_run(self):
         self._commands_widget.display_running()
 
         self._run_timer.start()
         self._run_signal()
 
     def _pressed_step(self):
-        self._clear_errors()
         self._commands_widget.display_paused()
 
         self.step()
@@ -63,20 +66,17 @@ class VisualiserController:
         self._highlight_current_position()
 
     def _pressed_stop(self):
-        self._clear_errors()
         self._commands_widget.display_stopped()
 
         self._run_timer.stop()
         self.stop()
 
     def _pressed_pause(self):
-        self._clear_errors()
         self._commands_widget.display_paused()
 
         self._run_timer.stop()
 
     def _pressed_back(self):
-        self._clear_errors()
         self._commands_widget.display_paused()
 
         self.back()
@@ -107,11 +107,11 @@ class VisualiserController:
             return 0
 
     def _set_runspeed(self):
-        if self._commands_widget.speed_checkbox.isChecked():
+        if self._commands_widget._speed_checkbox.isChecked():
             runspeed = 10
-            self._steps_skip = self._commands_widget.speed_slider.value() // 5
+            self._steps_skip = self._commands_widget._speed_slider.value() // 5
         else:
-            value = self._commands_widget.speed_slider.value() + 1
+            value = self._commands_widget._speed_slider.value() + 1
             runspeed = int(1000 / (value * value * 0.0098 + 1))
             self._steps_skip = 0
         self._run_timer.setInterval(runspeed)
