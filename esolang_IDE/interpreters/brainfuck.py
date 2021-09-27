@@ -1,6 +1,7 @@
 import functools
 from collections import deque
 
+from .base_interpreter import BaseInterpreter, VisualiserInterpreter
 from .errors import (
     ErrorTypes,
     ExecutionEndedError,
@@ -11,7 +12,7 @@ from .errors import (
 )
 
 
-class BrainfuckInterpreter:
+class BrainfuckInterpreter(VisualiserInterpreter):
     """Brainfuck interpreter."""
 
     def __init__(
@@ -80,9 +81,6 @@ class BrainfuckInterpreter:
         try:
             prev_info = self.past.pop()
         except IndexError:
-            assert (
-                self.instruction_count == 0
-            ), f'prev_info is empty but instruction count = {self.instruction_count}'
             raise NoPreviousExecutionError
         assert (
             self.instruction_count != 0
@@ -179,7 +177,7 @@ class BrainfuckInterpreter:
         return brackets
 
 
-class FastBrainfuckInterpreter:
+class FastBrainfuckInterpreter(BaseInterpreter):
     def __init__(self, code, input_func=input, output_func=None):
         self.commands, self.brackets = self._compile(code)
         self.input_func = input_func

@@ -24,7 +24,10 @@ class BrainfuckVisualiserWidget(BaseVisualiserWidget):
         self.table_model.reset()
 
     def configure_visual(self, visual_info):
-        self.table_model.set_tape(visual_info)
+        if visual_info is not None:
+            self.table_model.set_tape(visual_info)
+        else:
+            self.reset_visual()
 
     def update_visual(self):
         self.table_model.display_changes()
