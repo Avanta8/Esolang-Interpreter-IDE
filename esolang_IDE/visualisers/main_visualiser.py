@@ -34,11 +34,6 @@ class MainVisualiser(QtWidgets.QWidget):
 
         self.splitter.insertWidget(0, self._visualiser_widget)
 
-    # def closed(self):
-    #     """Method called when the visualiser containing `self` is closed."""
-    #     self.commands_frame.display_paused()
-    #     self.command_stop()
-
     def show_status_message(self, message):
         self.statusbar.showMessage(message)
 
