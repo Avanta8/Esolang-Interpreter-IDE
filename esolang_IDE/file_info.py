@@ -24,18 +24,18 @@ class FileInfo:
     def is_empty(self):
         empty = not self.filepath
 
-        if empty:
-            assert (
-                self.filepath == self.filename == '' and self.filetype is FileTypes.NONE
-            ), (
-                'FileInfo is empty but some attributes are not empty'
-                f' {self.filepath=}, {self.filename=}, {self.filetype=}'
-            )
-        else:
-            assert self.filetype != '' and self.filename != '', (
-                'FileInfo is not empty but one or more arribuetes are empty'
-                f' {self.filepath=}, {self.filename=}, {self.filetype=}'
-            )
+        # if empty:
+        #     assert (
+        #         self.filepath == self.filename == '' and self.filetype is FileTypes.NONE
+        #     ), (
+        #         'FileInfo is empty but some attributes are not empty'
+        #         f' {self.filepath=}, {self.filename=}, {self.filetype=}'
+        #     )
+        # else:
+        #     assert self.filetype != '' and self.filename != '', (
+        #         'FileInfo is not empty but one or more arribuetes are empty'
+        #         f' {self.filepath=}, {self.filename=}, {self.filetype=}'
+        #     )
 
         return empty
 
