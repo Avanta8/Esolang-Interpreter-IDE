@@ -44,7 +44,6 @@ class CodeText(Qsci.QsciScintilla):
 
         self.setScrollWidth(1)
 
-
     def configure_styles(self):
         self.setCaretLineBackgroundColor(QtGui.QColor(245, 245, 245))
         self.setIndentationGuidesBackgroundColor(QtGui.QColor(211, 211, 211))
@@ -52,13 +51,21 @@ class CodeText(Qsci.QsciScintilla):
 
         self.indicatorDefine(self.FullBoxIndicator, self._CURRENT_POSITION_INDICATOR)
         self.setIndicatorDrawUnder(True, self._CURRENT_POSITION_INDICATOR)
-        self.setIndicatorForegroundColor(QtGui.QColor('grey'), indicatorNumber=self._CURRENT_POSITION_INDICATOR)
-        self.setIndicatorOutlineColor(QtGui.QColor('grey'), indicatorNumber=self._CURRENT_POSITION_INDICATOR)
+        self.setIndicatorForegroundColor(
+            QtGui.QColor('grey'), indicatorNumber=self._CURRENT_POSITION_INDICATOR
+        )
+        self.setIndicatorOutlineColor(
+            QtGui.QColor('grey'), indicatorNumber=self._CURRENT_POSITION_INDICATOR
+        )
 
         self.indicatorDefine(self.FullBoxIndicator, self._ERROR_INDICATOR)
         self.setIndicatorDrawUnder(True, self._ERROR_INDICATOR)
-        self.setIndicatorForegroundColor(QtGui.QColor('red'), indicatorNumber=self._ERROR_INDICATOR)
-        self.setIndicatorOutlineColor(QtGui.QColor('red'), indicatorNumber=self._ERROR_INDICATOR)
+        self.setIndicatorForegroundColor(
+            QtGui.QColor('yellow'), indicatorNumber=self._ERROR_INDICATOR
+        )
+        self.setIndicatorOutlineColor(
+            QtGui.QColor('yellow'), indicatorNumber=self._ERROR_INDICATOR
+        )
 
     def set_lexer(self, lexer):
         self.setLexer(lexer(self))
