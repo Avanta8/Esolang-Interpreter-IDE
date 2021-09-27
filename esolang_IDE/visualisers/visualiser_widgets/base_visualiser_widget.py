@@ -14,11 +14,16 @@ class BaseVisualiserWidget(QtWidgets.QWidget):
         pass
 
     def reset_visual(self):
+        """Reset this data for the visualiser.
+        This method does not update visual however. (`update_visual` should
+        generally be called after this.)"""
         # Should be overidden in a subclass
         pass
 
-    def configure_visual(self):
-        """Method should be called after every step."""
+    def configure_visual(self, visual_info):
+        """Method should be called after every step.
+        `visual_info` can be None. In that case, this method should
+        do the same as `reset_visual`."""
         # Should be overidden in a subclass
         pass
 
