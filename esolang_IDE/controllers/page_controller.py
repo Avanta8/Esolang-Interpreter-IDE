@@ -3,8 +3,6 @@ from .visualiser_controller import VisualiserController
 from .runner_controller import RunnerController
 
 from esolang_IDE.editor_page import EditorPage
-from esolang_IDE.code_text import CodeText
-from esolang_IDE.code_runner import CodeRunner
 
 
 class PageController(QtCore.QObject):
@@ -22,12 +20,12 @@ class PageController(QtCore.QObject):
         self._editor_page.code_runner_closed.connect(self.code_runner_closed)
         self._editor_page.visualiser_closed.connect(self.visualiser_closed)
 
-        self._code_text = self._editor_page.get_code_text()
-        code_runner = self._editor_page.get_code_runner()
-        visualiser = self._editor_page.get_visualiser()
-
-        self._visualiser_controller = VisualiserController(self._code_text, visualiser)
-        self._runner_controller = RunnerController(self._code_text, code_runner)
+        self._visualiser_controller = VisualiserController(
+            self._code_text, self._editor_page.get_visualiser()
+        )
+        self._runner_controller = RunnerController(
+            self._code_text, self._editor_page.get_code_runner()
+        )
 
         self._code_text.textChanged.connect(self._code_text_changed)
 
@@ -61,3 +59,7 @@ class PageController(QtCore.QObject):
     @QtCore.pyqtSlot()
     def _code_text_changed(self):
         self.text_changed.emit(self._editor_page)
+
+    @property
+    def _code_text(self):
+        return self._editor_page.get_code_text()
