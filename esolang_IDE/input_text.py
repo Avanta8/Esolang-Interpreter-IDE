@@ -13,6 +13,13 @@ class StandardInputText(QtWidgets.QPlainTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.setFocusPolicy(QtCore.Qt.ClickFocus)
+
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        font.setFamily('Consolas')
+        self.setFont(font)
+
         self.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
 
         self.default_char_format = QtGui.QTextCharFormat()
@@ -150,6 +157,20 @@ class HighlightInputText(StandardInputText):
         textcursor.setPosition(start)
         textcursor.setPosition(end, QtGui.QTextCursor.KeepAnchor)
         textcursor.setCharFormat(format_)
+
+        self._scroll_to_cursor(textcursor)
+
+    def _scroll_to_cursor(self, cursor: QtGui.QTextCursor):
+        """
+        Scroll to the position given by `cursor`
+
+        Args:
+            cursor (QtGui.QTextCursor): Text cursor giving the location of where to scroll to
+        """
+
+        cursor.clearSelection()
+        self.setTextCursor(cursor)
+        self.ensureCursorVisible()
 
     def request_highlight_update(self):
         self._update_request.emit()
