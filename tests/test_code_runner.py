@@ -13,7 +13,7 @@ from esolang_IDE.code_runner import CodeRunner
 
 from esolang_IDE.file_info import FileInfo
 
-from esolang_IDE.constants import FileTypes
+from esolang_IDE.filetypes import FileTypes
 
 SHORT_TEST = False
 SKIPTEXT = 'SHORT_TEST is True'
