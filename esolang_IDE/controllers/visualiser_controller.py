@@ -9,7 +9,7 @@ from esolang_IDE.visualisers import MainVisualiser
 
 import esolang_IDE.interpreters as interpreters
 
-from esolang_IDE.constants import FileTypes
+from esolang_IDE.filetypes import FileTypes
 
 from esolang_IDE.visualisers.commands_widget import ButtonType
 

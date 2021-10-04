@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass
 
-from esolang_IDE.constants import FileTypes
+from esolang_IDE.filetypes import FileTypes
 
 
 @dataclass

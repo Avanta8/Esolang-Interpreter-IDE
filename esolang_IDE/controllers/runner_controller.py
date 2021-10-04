@@ -2,7 +2,7 @@ import enum
 
 from esolang_IDE.code_runner import CodeRunner, RunnerThread
 from esolang_IDE.code_text import CodeText
-from esolang_IDE.constants import FileTypes
+from esolang_IDE.filetypes import FileTypes
 import esolang_IDE.interpreters as interpreters
 
 
