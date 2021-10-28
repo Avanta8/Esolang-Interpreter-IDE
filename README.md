@@ -14,7 +14,7 @@ Please see [How to use](#how-to-use) for more information.
 **Please Note:** The project is early in development and there are bugs. If you are using it to edit your own code, I would highly recommend saving often, as the IDE may break unexpectedly, and your work could be lost.
 
 ## How To Install
-- Please install the latest Python 3.9 version (PyQt5 does not yet work with Python 3.10): https://www.python.org/downloads/
+- Please install Python 3.9 or later: https://www.python.org/downloads/
 - Download the project from Github and extract the zip file to a folder, or clone the repository using git.
 - Create a virtual environment by using `python -m venv venv` in the root directory of the project.
 - Activate the virtual environment `. venv/bin/activate` (Linux) or `./venv/Scripts/activate` (Win)
