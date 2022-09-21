@@ -5,7 +5,7 @@ IDE for Esoteric Programming Languages that can also visualise and execute code.
 
 ![overview](docs/images/home.png)
 
-The text editor is build on the Scintilla framework and has features such as multi-cursor support, automatic indentation and syntax highlighting.
+The text editor is built on the Scintilla framework and has features such as multi-cursor support, automatic indentation and syntax highlighting.
 
 Currently, the only language supported is Brainfusk.
 
@@ -19,8 +19,8 @@ Please see [How to use](#how-to-use) for more information.
 - Create a virtual environment by using `python -m venv venv` in the root directory of the project.
 - Activate the virtual environment `. venv/bin/activate` (Linux) or `./venv/Scripts/activate` (Win)
 - Install the project as module to the venv `pip install -e .`
-- Install the dependencies `pip install -r .\requirements.txt`
-- Now you can run the main file `.\esolang_IDE\__main__.py`
+- Install the dependencies `pip install -r ./requirements.txt`
+- Now you can run the main file `./esolang_IDE/__main__.py`
 
 ## How To Use
 
